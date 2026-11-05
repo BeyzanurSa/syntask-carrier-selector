@@ -4,10 +4,10 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Each call to select a Carrier creates exactly one Selection, including `no_carrier` and `invalid_order` outcomes
-- [ ] Selections can be listed newest first with a limit, and fetched by id; an unknown id returns 404
-- [ ] The detail page renders from the stored snapshot, not by recomputing
-- [ ] Re-running a Selection creates a new Selection and leaves the original unchanged
-- [ ] The dashboard shows the latest Selections with Turkish status badges
+- [x] Each call to select a Carrier creates exactly one Selection, including `no_carrier` and `invalid_order` outcomes
+- [x] Selections can be listed newest first with a limit, and fetched by id; an unknown id returns 404
+- [x] The detail page renders from the stored snapshot, not by recomputing
+- [x] Re-running a Selection creates a new Selection and leaves the original unchanged
+- [x] The dashboard shows the latest Selections with Turkish status badges

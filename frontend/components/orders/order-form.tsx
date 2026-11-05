@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
 import { SelectionResult } from "@/components/selection/selection-result";
@@ -124,7 +125,19 @@ export function OrderForm() {
         </Alert>
       )}
 
-      {result && <SelectionResult result={result} />}
+      {result && (
+        <div className="space-y-3">
+          {result.selection_id != null && (
+            <Link
+              href={`/selections/${result.selection_id}`}
+              className="text-primary text-sm underline-offset-4 hover:underline"
+            >
+              Seçim kaydı #{result.selection_id} →
+            </Link>
+          )}
+          <SelectionResult result={result} />
+        </div>
+      )}
     </div>
   );
 }

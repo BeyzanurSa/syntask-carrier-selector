@@ -41,6 +41,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/selections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Selections
+         * @description Stored Selections, newest first.
+         */
+        get: operations["selections_selections_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/selections/{selection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Selection */
+        get: operations["selection_selections__selection_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -89,8 +126,37 @@ export interface components {
             /** Hq Distance */
             hq_distance: string | null;
         };
+        /**
+         * SelectionRecord
+         * @description A stored Selection: what was asked, which ranking was used, and the response exactly as returned.
+         */
+        SelectionRecord: {
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Input Kind
+             * @constant
+             */
+            input_kind: "structured";
+            input: components["schemas"]["StructuredOrder"];
+            /** Ranking Used */
+            ranking_used: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
+            response: components["schemas"]["SelectionResponse"];
+        };
         /** SelectionResponse */
         SelectionResponse: {
+            /** Selection Id */
+            selection_id?: number | null;
             /**
              * Status
              * @enum {string}
@@ -113,6 +179,42 @@ export interface components {
              * @default []
              */
             rejected_carriers: components["schemas"]["RejectedCarrierOut"][];
+        };
+        /**
+         * SelectionSummary
+         * @description One row of the Selection history list.
+         */
+        SelectionSummary: {
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
+            /** Origin */
+            origin: string;
+            /** Destination */
+            destination: string;
+            /**
+             * Container Size
+             * @enum {integer}
+             */
+            container_size: 20 | 40 | 45;
+            /**
+             * Cargo Type
+             * @enum {string}
+             */
+            cargo_type: "Dry" | "Reefer" | "Hazardous";
+            /** Selected Carrier Name */
+            selected_carrier_name: string | null;
+            /** Total Cost */
+            total_cost: string | null;
         };
         /** StructuredOrder */
         StructuredOrder: {
@@ -203,6 +305,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SelectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    selections_selections_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelectionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    selection_selections__selection_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                selection_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelectionRecord"];
                 };
             };
             /** @description Validation Error */

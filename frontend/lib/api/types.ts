@@ -4,6 +4,8 @@ type Schemas = components["schemas"];
 
 export type StructuredOrder = Schemas["StructuredOrder"];
 export type SelectionResponse = Schemas["SelectionResponse"];
+export type SelectionSummary = Schemas["SelectionSummary"];
+export type SelectionRecord = Schemas["SelectionRecord"];
 export type SelectionStatus = SelectionResponse["status"];
 export type ContainerSize = StructuredOrder["container_size"];
 export type CargoType = StructuredOrder["cargo_type"];

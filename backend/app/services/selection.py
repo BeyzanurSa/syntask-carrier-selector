@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlmodel import Session, select
 
 from app import messages
-from app.database.models import Carrier
+from app.database.models import Carrier, Selection
 from app.engine.selector import select_carrier
 from app.engine.types import CarrierSpec, OrderContext, OrderSpec
 from app.schemas.selection import (
@@ -18,7 +18,7 @@ from app.schemas.selection import (
 )
 from app.services.cities import normalize_city
 from app.services.distance import DistanceService
-from app.services.rules_store import RulesStore
+from app.services.rules_store import RuleSet, RulesStore
 
 
 class SelectionService:
@@ -28,6 +28,12 @@ class SelectionService:
         self._rules = rules
 
     def run(self, order: StructuredOrder) -> SelectionResponse:
+        """Decide, then store the decision as an immutable Selection snapshot."""
+        rules = self._rules.load()
+        response = self._decide(order, rules)
+        return self._record(order, rules, response)
+
+    def _decide(self, order: StructuredOrder, rules: RuleSet) -> SelectionResponse:
         order = order.model_copy(
             update={"origin": normalize_city(order.origin), "destination": normalize_city(order.destination)}
         )
@@ -42,7 +48,6 @@ class SelectionService:
                 reason=messages.unknown_route(order.origin, order.destination),
             )
 
-        rules = self._rules.load()
         ctx = OrderContext(
             order=OrderSpec(order.origin, order.destination, order.container_size, order.cargo_type),
             route_miles=route.miles,
@@ -75,6 +80,24 @@ class SelectionService:
                 headquarters_city=winner.carrier.headquarters_city,
                 hq_distance=winner.hq_miles,
             )
+        return response
+
+    def _record(self, order: StructuredOrder, rules: RuleSet, response: SelectionResponse) -> SelectionResponse:
+        row = Selection(
+            input_kind="structured",
+            input=order.model_dump(mode="json"),
+            status=response.status,
+            selected_carrier_name=response.selected_carrier.name if response.selected_carrier else None,
+            total_cost=response.total_cost,
+            route_miles=response.distance.miles if response.distance else None,
+            ranking_used=rules.enabled_ranking,
+            response={},
+        )
+        self._session.add(row)
+        self._session.flush()  # assigns row.id, which the stored response must carry too
+        response.selection_id = row.id
+        row.response = response.model_dump(mode="json")
+        self._session.commit()
         return response
 
     def _hq_distance(self, hq_city: str, origin: str) -> Decimal | None:

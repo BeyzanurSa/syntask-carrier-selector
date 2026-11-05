@@ -12,6 +12,12 @@ export function formatMiles(value: string | null | undefined): string {
   return `${Number(value).toLocaleString("tr-TR", { useGrouping: false })} mil`;
 }
 
+// The backend stores UTC timestamps without a zone suffix; treat them as UTC.
+export function formatDateTime(iso: string): string {
+  const date = new Date(/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? iso : `${iso}Z`);
+  return date.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+}
+
 export const CARGO_LABELS: Record<CargoType, string> = {
   Dry: "Kuru yük (Dry)",
   Reefer: "Soğutmalı (Reefer)",

@@ -23,3 +23,18 @@ class Carrier(SQLModel, table=True):
     attributes: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
+
+
+class Selection(SQLModel, table=True):
+    """Immutable record of one decision. `response` is the full API response, so it never needs recomputing."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=_now, index=True)
+    input_kind: str  # "structured" (free text arrives with ticket 07)
+    input: dict = Field(sa_column=Column(JSON, nullable=False))
+    status: str
+    selected_carrier_name: str | None = None
+    total_cost: Decimal | None = Field(default=None, max_digits=12, decimal_places=2)
+    route_miles: Decimal | None = Field(default=None, max_digits=10, decimal_places=1)
+    ranking_used: list[str] = Field(sa_column=Column(JSON, nullable=False))
+    response: dict = Field(sa_column=Column(JSON, nullable=False))
