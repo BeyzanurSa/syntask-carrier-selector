@@ -8,6 +8,7 @@ from app.engine.types import CarrierSpec, OrderContext
 
 class Constraint(Protocol):
     name: str
+    label: str
 
     def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
         """None if the carrier passes, otherwise the reason it fails."""
@@ -16,6 +17,7 @@ class Constraint(Protocol):
 
 class ActiveConstraint:
     name = "active"
+    label = "Firma aktif"
 
     def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
         return None if carrier.is_active else messages.INACTIVE
@@ -25,6 +27,7 @@ class DistanceRangeConstraint:
     """Bounds are inclusive (the case says <= and >=). A missing bound means no limit."""
 
     name = "distance_range"
+    label = "Mesafe aralığı"
 
     def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
         miles = ctx.route_miles
@@ -37,6 +40,7 @@ class DistanceRangeConstraint:
 
 class ContainerSizeConstraint:
     name = "container_size"
+    label = "Konteyner boyutu"
 
     def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
         size = ctx.order.container_size
@@ -47,6 +51,7 @@ class ContainerSizeConstraint:
 
 class CargoTypeConstraint:
     name = "cargo_type"
+    label = "Yük tipi"
 
     def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
         cargo = ctx.order.cargo_type

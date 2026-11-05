@@ -40,6 +40,11 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
         <AlertTitle>{STATUS_LABELS[result.status]}</AlertTitle>
         <AlertDescription className="text-foreground">{result.reason}</AlertDescription>
       </Alert>
+      {result.rules_used.length > 0 && (
+        <p className="text-muted-foreground -mt-3 text-xs">
+          Kullanılan sıralama: <code>{result.rules_used.join(" → ")}</code>
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Seçilen firma" value={winner?.name ?? "—"} hint={winner?.headquarters_city} />

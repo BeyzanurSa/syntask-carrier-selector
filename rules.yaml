@@ -6,14 +6,12 @@ constraints:
   - distance_range
   - container_size
   - cargo_type
-
 # Ranking criteria, highest priority first. Ties left after all criteria go to the carrier name.
 ranking:
   - name: total_cost
     enabled: true
   - name: hq_proximity
     enabled: true
-
 thresholds:
   # Jev Choice answers below this confidence send the Order to Review.
   field_confidence: 0.75

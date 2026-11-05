@@ -3,7 +3,7 @@ import "server-only";
 import { io } from "next/cache";
 
 import { api } from "./client";
-import type { Carrier, SelectionRecord, SelectionSummary } from "./types";
+import type { Carrier, Rules, SelectionRecord, SelectionSummary } from "./types";
 
 // Server Components read from the backend on every request: history changes with each selection.
 // `io()` keeps these reads out of the prerendered static shell (Cache Components is enabled).
@@ -19,6 +19,13 @@ export async function fetchCarriers(): Promise<Carrier[]> {
   await io();
   const { data, error } = await api.GET("/carriers", { cache: "no-store" });
   if (error || !data) throw new Error("Taşıyıcılar alınamadı");
+  return data;
+}
+
+export async function fetchRules(): Promise<Rules> {
+  await io();
+  const { data, error } = await api.GET("/rules", { cache: "no-store" });
+  if (error || !data) throw new Error("Kurallar alınamadı");
   return data;
 }
 

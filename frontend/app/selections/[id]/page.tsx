@@ -32,7 +32,7 @@ export default async function SelectionDetailPage(props: PageProps<"/selections/
       </Link>
       <PageHeader
         title={`Seçim #${record.id}`}
-        description={`${formatDateTime(record.created_at)} · Kullanılan sıralama: ${record.ranking_used.join(" → ")}`}
+        description={formatDateTime(record.created_at)}
       />
       <div className="mb-6">
         <RerunButton order={record.input} />

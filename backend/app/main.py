@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import carriers, selection
+from app.api import carriers, rules, selection
 from app.core.config import Settings
 from app.database.session import init_db, make_engine
 from app.services.distance import DistanceProvider
@@ -38,6 +38,7 @@ def create_app(settings: Settings | None = None, *, distance_provider: DistanceP
 
     app.include_router(selection.router)
     app.include_router(carriers.router)
+    app.include_router(rules.router)
     return app
 
 

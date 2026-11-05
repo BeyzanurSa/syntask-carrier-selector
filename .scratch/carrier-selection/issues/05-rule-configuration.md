@@ -4,11 +4,11 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The Rule set can be read and replaced through the API
-- [ ] Saving an unknown criterion name or a ranking with no enabled criterion is refused with 400 and leaves the file untouched
-- [ ] Saved changes keep the comments in `rules.yaml`
-- [ ] With hq_proximity placed above total_cost, the same Order selects a different Carrier where the case data allows it, and the response's `rules_used` reflects the new order (tested through the API)
-- [ ] The UI lets the admin reorder and toggle Ranking criteria; Constraints and thresholds are shown read-only
-- [ ] Adding a new Ranking criterion requires only a registered class and a line in `rules.yaml` (documented for the demo)
+- [x] The Rule set can be read and replaced through the API
+- [x] Saving an unknown criterion name or a ranking with no enabled criterion is refused with 400 and leaves the file untouched
+- [x] Saved changes keep the comments in `rules.yaml`
+- [x] With hq_proximity placed above total_cost, the same Order selects a different Carrier where the case data allows it, and the response's `rules_used` reflects the new order (tested through the API)
+- [x] The UI lets the admin reorder and toggle Ranking criteria; Constraints and thresholds are shown read-only
+- [x] Adding a new Ranking criterion requires only a registered class and a line in `rules.yaml` (documented for the demo)

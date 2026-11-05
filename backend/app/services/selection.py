@@ -31,6 +31,7 @@ class SelectionService:
         """Decide, then store the decision as an immutable Selection snapshot."""
         rules = self._rules.load()
         response = self._decide(order, rules)
+        response.rules_used = rules.enabled_ranking
         return self._record(order, rules, response)
 
     def _decide(self, order: StructuredOrder, rules: RuleSet) -> SelectionResponse:

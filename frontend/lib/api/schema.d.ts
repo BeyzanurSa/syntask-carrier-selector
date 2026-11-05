@@ -115,6 +115,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Rules */
+        get: operations["read_rules_rules_get"];
+        /**
+         * Replace Rules
+         * @description Replace the Rule set in rules.yaml. Unknown names or no enabled ranking criterion → 400, file untouched.
+         */
+        put: operations["replace_rules_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -240,12 +261,42 @@ export interface components {
             /** Lost On */
             lost_on: string;
         };
+        /** RankingEntry */
+        RankingEntry: {
+            /** Name */
+            name: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
         /** RejectedCarrierOut */
         RejectedCarrierOut: {
             /** Name */
             name: string;
             /** Reasons */
             reasons: string[];
+        };
+        /** RuleSet */
+        RuleSet: {
+            /** Constraints */
+            constraints: string[];
+            /** Ranking */
+            ranking: components["schemas"]["RankingEntry"][];
+            thresholds: components["schemas"]["Thresholds"];
+        };
+        /** RulesOut */
+        RulesOut: {
+            /** Constraints */
+            constraints: string[];
+            /** Ranking */
+            ranking: components["schemas"]["RankingEntry"][];
+            thresholds: components["schemas"]["Thresholds"];
+            /** Labels */
+            labels: {
+                [key: string]: string;
+            };
         };
         /** SelectedCarrierOut */
         SelectedCarrierOut: {
@@ -311,6 +362,11 @@ export interface components {
              * @default []
              */
             rejected_carriers: components["schemas"]["RejectedCarrierOut"][];
+            /**
+             * Rules Used
+             * @default []
+             */
+            rules_used: string[];
         };
         /**
          * SelectionSummary
@@ -372,6 +428,13 @@ export interface components {
              * @enum {string}
              */
             cargo_type: "Dry" | "Reefer" | "Hazardous";
+        };
+        /** Thresholds */
+        Thresholds: {
+            /** Field Confidence */
+            field_confidence: number;
+            /** Note Warning */
+            note_warning: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -648,6 +711,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_rules_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
+                };
+            };
+        };
+    };
+    replace_rules_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleSet"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
+                };
             };
             /** @description Validation Error */
             422: {

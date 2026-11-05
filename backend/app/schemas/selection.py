@@ -50,6 +50,7 @@ class SelectionResponse(BaseModel):
     reason: str
     eligible_carriers: list[OutrankedCarrierOut] = []  # Outranked carriers, in rank order
     rejected_carriers: list[RejectedCarrierOut] = []
+    rules_used: list[str] = []  # enabled Ranking criteria, in priority order
 
 
 class SelectionSummary(BaseModel):
