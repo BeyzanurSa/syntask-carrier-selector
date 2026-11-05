@@ -4,13 +4,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Python 3.11+ is installed (with the user's confirmation) and the backend runs in its own virtual environment; the TypeSafe SDK installs cleanly
-- [ ] The backend exposes a health endpoint and an empty pytest suite runs green
-- [ ] The frontend starts, shows the sidebar with the five pages in Turkish, and the dashboard displays the backend's health status
-- [ ] Frontend API types are generated from the backend OpenAPI schema with one documented command
-- [ ] `.env.example` lists `TYPESAFE_API_KEY` and the API base URL with placeholders only; `.gitignore` excludes `.env`, virtualenvs, node_modules and the SQLite file
-- [ ] The frontend only knows the API base URL; no secret reaches any frontend variable
-- [ ] A short CLAUDE.md records the project rules (Jev interprets, code decides; no hardcoded carrier names; test command)
-- [ ] (Optional, with the user's OK) the project is a git repository with a first commit
+- [x] Python 3.11+ is installed (with the user's confirmation) and the backend runs in its own virtual environment; the TypeSafe SDK installs cleanly
+- [x] The backend exposes a health endpoint and an empty pytest suite runs green
+- [x] The frontend starts, shows the sidebar with the five pages in Turkish, and the dashboard displays the backend's health status
+- [x] Frontend API types are generated from the backend OpenAPI schema with one documented command
+- [x] `.env.example` lists `TYPESAFE_API_KEY` and the API base URL with placeholders only; `.gitignore` excludes `.env`, virtualenvs, node_modules and the SQLite file
+- [x] The frontend only knows the API base URL; no secret reaches any frontend variable
+- [x] A short CLAUDE.md records the project rules (Jev interprets, code decides; no hardcoded carrier names; test command)
+- [x] (Optional, with the user's OK) the project is a git repository with a first commit
