@@ -1,0 +1,21 @@
+# Rule set for carrier selection (ADR 0002: this file is the single source of truth).
+
+# Constraints: a carrier must pass all of these to be eligible. Order only affects the order of reasons.
+constraints:
+  - active
+  - distance_range
+  - container_size
+  - cargo_type
+
+# Ranking criteria, highest priority first. Ties left after all criteria go to the carrier name.
+ranking:
+  - name: total_cost
+    enabled: true
+  - name: hq_proximity
+    enabled: true
+
+thresholds:
+  # Jev Choice answers below this confidence send the Order to Review.
+  field_confidence: 0.75
+  # Jev Noul probability at or above which a carrier note raises a warning.
+  note_warning: 0.7

@@ -21,10 +21,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/select-carrier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Select Carrier
+         * @description Pick the best carrier for an Order. Business outcomes are reported in `status`, always with HTTP 200.
+         */
+        post: operations["select_carrier_select_carrier_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** DistanceOut */
+        DistanceOut: {
+            /** Miles */
+            miles: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "table" | "api";
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** OutrankedCarrierOut */
+        OutrankedCarrierOut: {
+            /** Name */
+            name: string;
+            /** Total Cost */
+            total_cost: string;
+            /** Hq Distance */
+            hq_distance: string | null;
+            /** Lost On */
+            lost_on: string;
+        };
+        /** RejectedCarrierOut */
+        RejectedCarrierOut: {
+            /** Name */
+            name: string;
+            /** Reasons */
+            reasons: string[];
+        };
+        /** SelectedCarrierOut */
+        SelectedCarrierOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Headquarters City */
+            headquarters_city: string;
+            /** Hq Distance */
+            hq_distance: string | null;
+        };
+        /** SelectionResponse */
+        SelectionResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
+            order: components["schemas"]["StructuredOrder"];
+            selected_carrier?: components["schemas"]["SelectedCarrierOut"] | null;
+            distance?: components["schemas"]["DistanceOut"] | null;
+            /** Total Cost */
+            total_cost?: string | null;
+            /** Reason */
+            reason: string;
+            /**
+             * Eligible Carriers
+             * @default []
+             */
+            eligible_carriers: components["schemas"]["OutrankedCarrierOut"][];
+            /**
+             * Rejected Carriers
+             * @default []
+             */
+            rejected_carriers: components["schemas"]["RejectedCarrierOut"][];
+        };
+        /** StructuredOrder */
+        StructuredOrder: {
+            /**
+             * Origin
+             * @example Miami
+             */
+            origin: string;
+            /**
+             * Destination
+             * @example Orlando
+             */
+            destination: string;
+            /**
+             * Container Size
+             * @example 40
+             * @enum {integer}
+             */
+            container_size: 20 | 40 | 45;
+            /**
+             * Cargo Type
+             * @example Dry
+             * @enum {string}
+             */
+            cargo_type: "Dry" | "Reefer" | "Hazardous";
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -51,6 +179,39 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    select_carrier_select_carrier_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructuredOrder"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

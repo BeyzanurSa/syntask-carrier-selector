@@ -4,16 +4,16 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] All seven case Orders return the expected result through the API: M-Logistics $30, S-Logistics $94, B-Logistics $660 (tie broken by HQ proximity), A-Logistics $280, S-Logistics $80, no Carrier, M-Logistics $85
-- [ ] Distances of exactly 200, 250 and 300 miles count as inside the range (inclusive bounds)
-- [ ] Container size mismatch and cargo type mismatch each produce a Rejected carrier with a clear Turkish reason; a Carrier failing several Constraints lists all of them
-- [ ] A tie on cost goes to the closer HQ; a tie that remains goes to the Carrier name alphabetically
-- [ ] HQ proximity is 0 when the HQ is the origin city
-- [ ] No Eligible carrier returns status `no_carrier` with every Carrier's reasons
-- [ ] Same origin and destination, unsupported values, or a malformed body give `invalid_order` / 422 as specified
-- [ ] Money is a 2-decimal decimal value, never a float
-- [ ] City names match case-insensitively and through the alias map
-- [ ] The result screen shows selected Carrier, cost, distance + source, reason, Outranked and Rejected lists
-- [ ] Tests run through the HTTP API only (no engine-internal tests)
+- [x] All seven case Orders return the expected result through the API: M-Logistics $30, S-Logistics $94, B-Logistics $660 (tie broken by HQ proximity), A-Logistics $280, S-Logistics $80, no Carrier, M-Logistics $85
+- [x] Distances of exactly 200, 250 and 300 miles count as inside the range (inclusive bounds)
+- [x] Container size mismatch and cargo type mismatch each produce a Rejected carrier with a clear Turkish reason; a Carrier failing several Constraints lists all of them
+- [x] A tie on cost goes to the closer HQ; a tie that remains goes to the Carrier name alphabetically
+- [x] HQ proximity is 0 when the HQ is the origin city
+- [x] No Eligible carrier returns status `no_carrier` with every Carrier's reasons
+- [x] Same origin and destination, unsupported values, or a malformed body give `invalid_order` / 422 as specified
+- [x] Money is a 2-decimal decimal value, never a float
+- [x] City names match case-insensitively and through the alias map
+- [x] The result screen shows selected Carrier, cost, distance + source, reason, Outranked and Rejected lists
+- [x] Tests run through the HTTP API only (no engine-internal tests)

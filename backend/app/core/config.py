@@ -14,3 +14,5 @@ class Settings(BaseSettings):
     # SecretStr keeps the key out of repr() and logs.
     typesafe_api_key: SecretStr | None = None
     frontend_origin: str = "http://localhost:3000"
+    database_url: str = f"sqlite:///{BACKEND_DIR / 'carrier_selector.db'}"
+    rules_path: Path = BACKEND_DIR.parent / "rules.yaml"
