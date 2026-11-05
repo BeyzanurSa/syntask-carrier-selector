@@ -93,6 +93,12 @@ class ReviewOut(BaseModel):
     question: str
 
 
+class NoteWarningOut(BaseModel):
+    carrier: str
+    note: str
+    probability: float  # Jev's probability that the note matters for this Order
+
+
 class SelectionResponse(BaseModel):
     selection_id: int | None = None
     status: SelectionStatus
@@ -106,6 +112,8 @@ class SelectionResponse(BaseModel):
     rules_used: list[str] = []  # enabled Ranking criteria, in priority order
     confidence: ConfidenceOut = ConfidenceOut()
     review: ReviewOut | None = None
+    warnings: list[NoteWarningOut] = []  # informational only: never change the selected carrier
+    notes_checked: bool = True  # False when Eligible carriers had notes that could not be checked
 
 
 class SelectionSummary(BaseModel):

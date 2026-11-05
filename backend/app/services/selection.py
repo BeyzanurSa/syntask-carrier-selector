@@ -12,6 +12,7 @@ from app.schemas.selection import (
     ConfidenceOut,
     DistanceOut,
     FieldConfidenceOut,
+    NoteWarningOut,
     OutrankedCarrierOut,
     RejectedCarrierOut,
     ReviewOut,
@@ -38,6 +39,7 @@ class SelectionService:
         self._distances = distances
         self._rules = rules
         self._interpreter = interpreter
+        self._notes: dict[str, str] = {}
 
     def run(self, request: SelectCarrierRequest) -> SelectionResponse:
         """Decide (interpreting free text first, if given), then store the decision as a Selection snapshot."""
@@ -104,7 +106,8 @@ class SelectionService:
             route_miles=route.miles,
             hq_distance=self._hq_distance,
         )
-        outcome = select_carrier(self._load_carriers(), ctx, rules.constraints, rules.enabled_ranking)
+        carriers = self._load_carriers()
+        outcome = select_carrier(carriers, ctx, rules.constraints, rules.enabled_ranking)
 
         response = SelectionResponse(
             status="selected" if outcome.winner else "no_carrier",
@@ -131,7 +134,32 @@ class SelectionService:
                 headquarters_city=winner.carrier.headquarters_city,
                 hq_distance=winner.hq_miles,
             )
+
+        eligible = [outcome.winner.carrier.name] if outcome.winner else []
+        eligible += [o.candidate.carrier.name for o in outcome.outranked]
+        response.warnings, response.notes_checked = self._check_notes(order, eligible, rules)
         return response
+
+    def _check_notes(
+        self, order: StructuredOrder, eligible: list[str], rules: RuleSet
+    ) -> tuple[list[NoteWarningOut], bool]:
+        """Ask Jev whether each Eligible carrier's note matters for this Order. Informational only."""
+        notes = {name: self._notes[name] for name in eligible if self._notes.get(name)}
+        if not notes:
+            return [], True
+        if self._interpreter is None:
+            return [], False
+        try:
+            probabilities = self._interpreter.assess_notes(order.model_dump(), notes)
+        except InterpreterUnavailable:
+            return [], False
+        threshold = rules.thresholds.note_warning
+        warnings = [
+            NoteWarningOut(carrier=name, note=notes[name], probability=p)
+            for name, p in probabilities.items()
+            if name in notes and p >= threshold
+        ]
+        return warnings, True
 
     def _record(self, request: SelectCarrierRequest, rules: RuleSet, response: SelectionResponse) -> SelectionResponse:
         row = Selection(
@@ -165,6 +193,8 @@ class SelectionService:
 
     def _load_carriers(self) -> list[CarrierSpec]:
         rows = self._session.exec(select(Carrier).order_by(Carrier.name)).all()
+        # Carrier notes stay out of the engine (they are never Constraints); only _check_notes reads them.
+        self._notes = {row.name: (row.description or "").strip() for row in rows}
         return [
             CarrierSpec(
                 id=row.id,

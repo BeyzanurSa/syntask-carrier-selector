@@ -1,4 +1,13 @@
-import { AlertTriangle, CheckCircle2, CircleSlash, MapPinOff, MessageCircleQuestion, PlugZap } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CircleSlash,
+  Info,
+  MapPinOff,
+  MessageCircleQuestion,
+  PlugZap,
+  StickyNote,
+} from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +43,7 @@ const STATUS_ICONS: Record<SelectionStatus, typeof CheckCircle2> = {
 
 export function SelectionResult({ result }: { result: SelectionResponse }) {
   const { order, selected_carrier: winner, distance } = result;
+  const warned = new Set(result.warnings.map((w) => w.carrier));
   const Icon = STATUS_ICONS[result.status];
   const ok = result.status === "selected";
 
@@ -52,7 +62,12 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
 
       {order && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Seçilen firma" value={winner?.name ?? "—"} hint={winner?.headquarters_city} />
+          <Stat
+            label="Seçilen firma"
+            value={winner?.name ?? "—"}
+            hint={winner?.headquarters_city}
+            badge={winner && warned.has(winner.name) ? "Not uyarısı" : undefined}
+          />
           <Stat label="Toplam ücret" value={formatMoney(result.total_cost)} />
           <Stat
             label="Rota mesafesi"
@@ -62,6 +77,34 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
           />
           <Stat label="Sipariş" value={`${order.container_size} ft`} hint={CARGO_LABELS[order.cargo_type]} />
         </div>
+      )}
+
+      {result.warnings.length > 0 && (
+        <Alert className="border-warning/50 bg-warning/10">
+          <StickyNote className="text-warning" aria-hidden />
+          <AlertTitle>Firma notu uyarısı</AlertTitle>
+          <AlertDescription className="text-foreground space-y-2">
+            <p className="text-muted-foreground text-xs">
+              Jev bu notların sipariş için önemli olabileceğini düşünüyor. Seçimi değiştirmez; gerekirse firmayı
+              arayın.
+            </p>
+            <ul className="space-y-1.5">
+              {result.warnings.map((w) => (
+                <li key={w.carrier}>
+                  <span className="font-medium">{w.carrier}</span>{" "}
+                  <span className="text-muted-foreground text-xs tabular-nums">(olasılık {w.probability.toFixed(2)})</span>
+                  : “{w.note}”
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+      {!result.notes_checked && (
+        <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <Info className="size-3.5" aria-hidden />
+          Firma notları kontrol edilemedi (Jev&apos;e ulaşılamadı); uyarı listesi eksik olabilir.
+        </p>
       )}
 
       {result.confidence.source === "text" && Object.keys(result.confidence.fields).length > 0 && (
@@ -126,7 +169,12 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
               <TableBody>
                 {result.eligible_carriers.map((c) => (
                   <TableRow key={c.name}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {c.name}
+                      {warned.has(c.name) && (
+                        <StickyNote className="text-warning ml-1.5 inline size-3.5" aria-label="Not uyarısı var" />
+                      )}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">{formatMoney(c.total_cost)}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatMiles(c.hq_distance)}</TableCell>
                     <TableCell className="text-muted-foreground whitespace-normal">{c.lost_on}</TableCell>

@@ -339,6 +339,15 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** NoteWarningOut */
+        NoteWarningOut: {
+            /** Carrier */
+            carrier: string;
+            /** Note */
+            note: string;
+            /** Probability */
+            probability: number;
+        };
         /** OutrankedCarrierOut */
         OutrankedCarrierOut: {
             /** Name */
@@ -509,6 +518,16 @@ export interface components {
              */
             confidence: components["schemas"]["ConfidenceOut"];
             review?: components["schemas"]["ReviewOut"] | null;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: components["schemas"]["NoteWarningOut"][];
+            /**
+             * Notes Checked
+             * @default true
+             */
+            notes_checked: boolean;
         };
         /**
          * SelectionSummary

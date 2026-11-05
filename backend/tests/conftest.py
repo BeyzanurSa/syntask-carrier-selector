@@ -40,18 +40,33 @@ def reading(value: str | None, confidence: float | None = 0.95) -> FieldReading:
 
 
 class FakeInterpreter:
-    """Scripted stand-in for Jev: returns the given Interpretation and records what it was asked."""
+    """Scripted stand-in for Jev: returns the given answers and records what it was asked."""
 
-    def __init__(self, interpretation: Interpretation | None = None, fail: bool = False):
+    def __init__(
+        self,
+        interpretation: Interpretation | None = None,
+        fail: bool = False,
+        note_probabilities: dict[str, float] | None = None,
+        notes_fail: bool = False,
+    ):
         self.interpretation = interpretation
         self.fail = fail
+        self.note_probabilities = note_probabilities or {}
+        self.notes_fail = notes_fail
         self.calls: list[tuple[str, list[str]]] = []
+        self.note_calls: list[tuple[dict, dict[str, str]]] = []
 
     def interpret(self, text: str, known_cities: list[str]) -> Interpretation:
         self.calls.append((text, known_cities))
         if self.fail:
             raise InterpreterUnavailable("Jev down")
         return self.interpretation
+
+    def assess_notes(self, order: dict, notes: dict[str, str]) -> dict[str, float]:
+        self.note_calls.append((order, notes))
+        if self.notes_fail:
+            raise InterpreterUnavailable("Jev down")
+        return {name: self.note_probabilities.get(name, 0.0) for name in notes}
 
 
 def interpretation(origin="Miami", destination="Orlando", container_size="40", cargo_type="Dry") -> Interpretation:

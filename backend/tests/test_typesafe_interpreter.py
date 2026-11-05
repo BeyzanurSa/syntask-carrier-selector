@@ -1,7 +1,7 @@
 """Adapter test for the Jev interpreter, with the SDK client stubbed (no network, no key)."""
 
 import pytest
-from typesafe_sdk import Choice, SystemOneResponse, TypeSafeAPIConnectionError, TypeSafeAPITimeoutError
+from typesafe_sdk import Choice, Noul, SystemOneResponse, TypeSafeAPIConnectionError, TypeSafeAPITimeoutError
 
 from app.services.interpreter import FieldReading, InterpreterUnavailable
 from app.services.typesafe_interpreter import TypeSafeInterpreter
@@ -70,3 +70,25 @@ def test_missing_answer_becomes_a_reading_without_value_or_confidence():
 def test_sdk_errors_become_interpreter_unavailable(error):
     with pytest.raises(InterpreterUnavailable):
         TypeSafeInterpreter(StubClient(error=error)).interpret("text", CITIES)
+
+
+def test_each_note_is_one_noul_question_mapped_back_to_its_carrier():
+    client = StubClient({"note_0": {"type": "noul", "noul": 0.92}, "note_1": {"type": "noul", "noul": 0.05}})
+    order = {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_type": "Dry"}
+
+    result = TypeSafeInterpreter(client).assess_notes(
+        order, {"S-Logistics": "Hafta sonu çalışmıyoruz.", "M-Logistics": "Her gün açığız."}
+    )
+
+    assert result == {"S-Logistics": 0.92, "M-Logistics": 0.05}
+    request = client.requests[0]
+    assert "Miami" in request["state"] and "40-foot" in request["state"]
+    assert all(isinstance(q, Noul) for q in request["questions"].values())
+    assert "Hafta sonu çalışmıyoruz." in request["questions"]["note_0"].instructions
+
+
+def test_note_check_sdk_error_becomes_interpreter_unavailable():
+    with pytest.raises(InterpreterUnavailable):
+        TypeSafeInterpreter(StubClient(error=TypeSafeAPIConnectionError("down"))).assess_notes(
+            {"origin": "A", "destination": "B", "container_size": 20, "cargo_type": "Dry"}, {"X": "note"}
+        )

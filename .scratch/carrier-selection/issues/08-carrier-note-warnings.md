@@ -4,10 +4,10 @@
 
 **Blocked by:** 04, 07
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A note judged relevant produces a warning with the Carrier name, note text and probability, and the selected Carrier is the same as without the note (tested with a fake interpreter)
-- [ ] Carriers without notes are not sent to Jev
-- [ ] When the check fails, the selection still completes and `notes_checked` is false
-- [ ] The result screen shows warnings with a clear icon and the note text
-- [ ] Demo path works: edit a Carrier note on the Taşıyıcılar page, re-run an Order, and the warning appears
+- [x] A note judged relevant produces a warning with the Carrier name, note text and probability, and the selected Carrier is the same as without the note (tested with a fake interpreter)
+- [x] Carriers without notes are not sent to Jev
+- [x] When the check fails, the selection still completes and `notes_checked` is false
+- [x] The result screen shows warnings with a clear icon and the note text
+- [x] Demo path works: edit a Carrier note on the Taşıyıcılar page, re-run an Order, and the warning appears

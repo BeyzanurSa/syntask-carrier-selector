@@ -39,3 +39,8 @@ class Interpreter(Protocol):
     def interpret(self, text: str, known_cities: list[str]) -> Interpretation:
         """Read the Order fields from text. Cities are chosen from `known_cities`. Raises InterpreterUnavailable."""
         ...
+
+    def assess_notes(self, order: dict, notes: dict[str, str]) -> dict[str, float]:
+        """For each carrier name → Carrier note, the probability that the note states a restriction or risk
+        relevant to this Order. Raises InterpreterUnavailable."""
+        ...
