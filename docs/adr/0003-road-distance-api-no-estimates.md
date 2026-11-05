@@ -1,0 +1,3 @@
+# Road distances from an API, never estimated
+
+Distances are resolved in this order: the case's fixed table (symmetric), then the database cache, then Nominatim geocoding with an OSRM road distance (no API key, 5 s timeout), which is written to the cache. If none of these gives an answer, the Order gets `unknown_route` and no Carrier is selected. We do not use straight-line (haversine) distance. It understates road miles (Miami to Orlando: about 205 straight-line vs 235 by road), so it would quietly produce wrong prices. A Carrier whose HQ proximity is unknown is ranked last on that criterion instead of being excluded.

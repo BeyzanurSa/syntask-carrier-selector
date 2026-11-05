@@ -1,0 +1,9 @@
+fastapi==0.162.0
+httpx==0.28.1
+pydantic-settings==2.16.2
+pytest==9.2.0
+respx==0.23.1
+ruamel.yaml==0.19.1
+sqlmodel==0.0.48
+typesafe-sdk==0.7.5
+uvicorn[standard]==0.54.0

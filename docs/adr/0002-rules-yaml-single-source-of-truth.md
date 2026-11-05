@@ -1,0 +1,3 @@
+# rules.yaml is the single source of truth for the Rule set
+
+The Rule set (Constraints, the order of Ranking criteria, thresholds) lives in `rules.yaml`, not in the database. The engine reads it on every request. The UI changes it through `PUT /rules`, which validates names against the code registry and writes the file with comments preserved. We deviate from the usual "settings in the DB" approach because the case asks for rule order to be managed through `rules.yaml`, and because a single file keeps every rule change visible in git. A new criterion therefore needs a registered class in code plus a line in the YAML, never a schema change.
