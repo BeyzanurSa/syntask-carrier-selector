@@ -4,13 +4,13 @@
 
 **Blocked by:** 02, 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Create, read, update and delete work through the API and the UI
-- [ ] Duplicate name → 409, unknown id → 404, invalid data → 422 (non-positive price, min > max, empty or unsupported container sizes / cargo types)
-- [ ] An empty max distance means unlimited
-- [ ] A newly added Carrier is selected for an Order it wins (tested through the API)
-- [ ] A deactivated Carrier is listed among Rejected carriers with "Firma pasif" and is never selected
-- [ ] After a Carrier is deleted, a Selection that chose it still opens with its original data
-- [ ] The Carrier note can be edited and saved from the UI
-- [ ] The dashboard shows total and active Carrier counts
+- [x] Create, read, update and delete work through the API and the UI
+- [x] Duplicate name → 409, unknown id → 404, invalid data → 422 (non-positive price, min > max, empty or unsupported container sizes / cargo types)
+- [x] An empty max distance means unlimited
+- [x] A newly added Carrier is selected for an Order it wins (tested through the API)
+- [x] A deactivated Carrier is listed among Rejected carriers with "Firma pasif" and is never selected
+- [x] After a Carrier is deleted, a Selection that chose it still opens with its original data
+- [x] The Carrier note can be edited and saved from the UI
+- [x] The dashboard shows total and active Carrier counts

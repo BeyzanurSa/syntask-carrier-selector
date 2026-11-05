@@ -78,10 +78,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/carriers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Carriers */
+        get: operations["list_carriers_carriers_get"];
+        put?: never;
+        /** Create Carrier */
+        post: operations["create_carrier_carriers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/carriers/{carrier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Carrier */
+        get: operations["get_carrier_carriers__carrier_id__get"];
+        /** Replace Carrier */
+        put: operations["replace_carrier_carriers__carrier_id__put"];
+        post?: never;
+        /** Delete Carrier */
+        delete: operations["delete_carrier_carriers__carrier_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * CarrierIn
+         * @description Carrier data as created or fully replaced (PUT). Guards the engine against bad data.
+         */
+        CarrierIn: {
+            /** Name */
+            name: string;
+            /** Headquarters City */
+            headquarters_city: string;
+            /**
+             * Min Distance
+             * @description Miles, inclusive. Empty = no lower bound.
+             */
+            min_distance?: number | null;
+            /**
+             * Max Distance
+             * @description Miles, inclusive. Empty = unlimited.
+             */
+            max_distance?: number | null;
+            /** Supported Container Sizes */
+            supported_container_sizes: (20 | 40 | 45)[];
+            /** Supported Cargo Types */
+            supported_cargo_types: ("Dry" | "Reefer" | "Hazardous")[];
+            /** Price Per Mile */
+            price_per_mile: number | string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Description
+             * @description Carrier note. Never a Constraint.
+             */
+            description?: string | null;
+            /**
+             * Attributes
+             * @description Extra data for future ranking criteria.
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
+        };
+        /** CarrierOut */
+        CarrierOut: {
+            /** Name */
+            name: string;
+            /** Headquarters City */
+            headquarters_city: string;
+            /**
+             * Min Distance
+             * @description Miles, inclusive. Empty = no lower bound.
+             */
+            min_distance?: number | null;
+            /**
+             * Max Distance
+             * @description Miles, inclusive. Empty = unlimited.
+             */
+            max_distance?: number | null;
+            /** Supported Container Sizes */
+            supported_container_sizes: (20 | 40 | 45)[];
+            /** Supported Cargo Types */
+            supported_cargo_types: ("Dry" | "Reefer" | "Hazardous")[];
+            /** Price Per Mile */
+            price_per_mile: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Description
+             * @description Carrier note. Never a Constraint.
+             */
+            description?: string | null;
+            /**
+             * Attributes
+             * @description Extra data for future ranking criteria.
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** DistanceOut */
         DistanceOut: {
             /** Miles */
@@ -368,6 +500,154 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SelectionRecord"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_carriers_carriers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"][];
+                };
+            };
+        };
+    };
+    create_carrier_carriers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarrierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_carrier_carriers__carrier_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                carrier_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_carrier_carriers__carrier_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                carrier_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarrierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_carrier_carriers__carrier_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                carrier_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -4,39 +4,54 @@ import { BackendStatus } from "@/components/backend-status";
 import { PageHeader } from "@/components/page-header";
 import { SelectionsTable } from "@/components/selection/selections-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { fetchSelections } from "@/lib/api/server";
+import { fetchCarriers, fetchSelections } from "@/lib/api/server";
 
 export default async function DashboardPage() {
-  const recent = await fetchSelections(8);
+  const [carriers, recent] = await Promise.all([fetchCarriers(), fetchSelections(8)]);
+  const active = carriers.filter((c) => c.is_active).length;
 
   return (
     <>
       <PageHeader title="Dashboard" description="Taşıyıcı ağı ve son seçimlerin özeti" />
-      <div className="grid gap-6 xl:grid-cols-[1fr_18rem]">
-        <Card>
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Toplam taşıyıcı" value={carriers.length} href="/carriers" />
+        <StatCard label="Aktif taşıyıcı" value={active} href="/carriers" />
+        <Card size="sm">
           <CardHeader>
-            <CardTitle>Son seçimler</CardTitle>
-            <CardDescription>
-              En son {recent.length} sipariş ·{" "}
-              <Link href="/selections" className="text-primary underline-offset-4 hover:underline">
-                Tümünü gör
-              </Link>
-            </CardDescription>
+            <CardDescription>Sistem durumu</CardDescription>
+            <div className="pt-1">
+              <BackendStatus />
+            </div>
           </CardHeader>
-          <CardContent>
-            <SelectionsTable selections={recent} />
-          </CardContent>
-        </Card>
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Sistem durumu</CardTitle>
-            <CardDescription>Backend bağlantısı</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BackendStatus />
-          </CardContent>
         </Card>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Son seçimler</CardTitle>
+          <CardDescription>
+            En son {recent.length} sipariş ·{" "}
+            <Link href="/selections" className="text-primary underline-offset-4 hover:underline">
+              Tümünü gör
+            </Link>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SelectionsTable selections={recent} />
+        </CardContent>
+      </Card>
     </>
+  );
+}
+
+function StatCard({ label, value, href }: { label: string; value: number; href: string }) {
+  return (
+    <Link href={href} className="rounded-xl focus-visible:outline-2">
+      <Card size="sm" className="hover:ring-primary/30 h-full transition-shadow hover:ring-2">
+        <CardHeader>
+          <CardDescription>{label}</CardDescription>
+          <CardTitle className="text-3xl tabular-nums">{value}</CardTitle>
+        </CardHeader>
+      </Card>
+    </Link>
   );
 }
