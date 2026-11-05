@@ -22,3 +22,5 @@ Case study: picks the best carrier for a container transport Order.
 - Frontend dev server: `cd frontend && npm run dev`
 - Frontend checks: `cd frontend && npm run typecheck && npm run lint`
 - Regenerate API types after backend schema changes: `cd frontend && npm run gen:api`
+- Warm the distance cache before a live demo: `cd backend && .venv/bin/python -m app.warm_cache`
+- Demo script: `docs/demo.md`

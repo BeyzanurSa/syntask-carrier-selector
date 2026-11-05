@@ -113,10 +113,10 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Firma</TableHead>
-            <TableHead>Merkez</TableHead>
-            <TableHead>Mesafe</TableHead>
-            <TableHead>Konteyner</TableHead>
-            <TableHead>Yük tipi</TableHead>
+            <TableHead className="hidden sm:table-cell">Merkez</TableHead>
+            <TableHead className="hidden md:table-cell">Mesafe</TableHead>
+            <TableHead className="hidden md:table-cell">Konteyner</TableHead>
+            <TableHead className="hidden lg:table-cell">Yük tipi</TableHead>
             <TableHead className="text-right">$/mil</TableHead>
             <TableHead>Aktif</TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
@@ -129,10 +129,10 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
                 <div className="font-medium">{c.name}</div>
                 {c.description && <div className="text-muted-foreground line-clamp-2 text-xs">{c.description}</div>}
               </TableCell>
-              <TableCell>{c.headquarters_city}</TableCell>
-              <TableCell>{distanceRange(c)}</TableCell>
-              <TableCell>{c.supported_container_sizes.join(", ")} ft</TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">{c.headquarters_city}</TableCell>
+              <TableCell className="hidden md:table-cell">{distanceRange(c)}</TableCell>
+              <TableCell className="hidden md:table-cell">{c.supported_container_sizes.join(", ")} ft</TableCell>
+              <TableCell className="hidden lg:table-cell">
                 <div className="flex flex-wrap gap-1">
                   {c.supported_cargo_types.map((t) => (
                     <Badge key={t} variant="secondary">

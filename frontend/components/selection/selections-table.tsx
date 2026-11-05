@@ -29,39 +29,45 @@ export function SelectionsTable({ selections }: { selections: SelectionSummary[]
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Tarih</TableHead>
+          <TableHead className="hidden sm:table-cell">Tarih</TableHead>
           <TableHead>Rota</TableHead>
-          <TableHead>Konteyner / Yük</TableHead>
+          <TableHead className="hidden md:table-cell">Konteyner / Yük</TableHead>
           <TableHead>Durum</TableHead>
-          <TableHead>Seçilen firma</TableHead>
-          <TableHead className="text-right">Ücret</TableHead>
+          <TableHead className="hidden sm:table-cell">Seçilen firma</TableHead>
+          <TableHead className="hidden text-right sm:table-cell">Ücret</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {selections.map((s) => (
           <TableRow key={s.id}>
-            <TableCell className="text-muted-foreground tabular-nums">
+            <TableCell className="text-muted-foreground hidden tabular-nums sm:table-cell">
               <Link href={`/selections/${s.id}`} className="hover:text-foreground hover:underline">
                 {formatDateTime(s.created_at)}
               </Link>
             </TableCell>
-            <TableCell className="font-medium">
+            <TableCell className="font-medium whitespace-normal">
               <Link href={`/selections/${s.id}`} className="hover:underline">
                 {s.origin ? (
                   `${s.origin} → ${s.destination}`
                 ) : (
-                  <span className="text-muted-foreground line-clamp-1 max-w-56 font-normal italic">
+                  <span className="text-muted-foreground line-clamp-2 max-w-40 font-normal italic sm:line-clamp-1 sm:max-w-56">
                     “{s.input_text}”
                   </span>
                 )}
               </Link>
+              {/* On phones the carrier and price columns are hidden; show them under the route instead. */}
+              <div className="text-muted-foreground text-xs font-normal sm:hidden">
+                {s.selected_carrier_name ?? "—"} · {formatMoney(s.total_cost)}
+              </div>
             </TableCell>
-            <TableCell>{s.container_size ? `${s.container_size} ft · ${s.cargo_type}` : "—"}</TableCell>
+            <TableCell className="hidden md:table-cell">
+              {s.container_size ? `${s.container_size} ft · ${s.cargo_type}` : "—"}
+            </TableCell>
             <TableCell>
               <StatusBadge status={s.status} />
             </TableCell>
-            <TableCell>{s.selected_carrier_name ?? "—"}</TableCell>
-            <TableCell className="text-right tabular-nums">{formatMoney(s.total_cost)}</TableCell>
+            <TableCell className="hidden sm:table-cell">{s.selected_carrier_name ?? "—"}</TableCell>
+            <TableCell className="hidden text-right tabular-nums sm:table-cell">{formatMoney(s.total_cost)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
