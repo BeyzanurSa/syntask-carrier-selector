@@ -25,6 +25,7 @@ def get_selection_service(request: Request, session: SessionDep) -> SelectionSer
         session=session,
         distances=DistanceService(state.distance_provider, session),
         rules=RulesStore(state.settings.rules_path),
+        interpreter=state.interpreter,
     )
 
 

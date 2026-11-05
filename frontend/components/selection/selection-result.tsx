@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CircleSlash, MapPinOff } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleSlash, MapPinOff, MessageCircleQuestion, PlugZap } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,9 @@ import type { SelectionResponse, SelectionStatus } from "@/lib/api/types";
 import {
   CARGO_LABELS,
   DISTANCE_SOURCE_LABELS,
+  FIELD_LABELS,
   STATUS_LABELS,
+  formatConfidence,
   formatMiles,
   formatMoney,
 } from "@/lib/format";
@@ -26,6 +28,8 @@ const STATUS_ICONS: Record<SelectionStatus, typeof CheckCircle2> = {
   no_carrier: CircleSlash,
   unknown_route: MapPinOff,
   invalid_order: AlertTriangle,
+  needs_review: MessageCircleQuestion,
+  jev_unavailable: PlugZap,
 };
 
 export function SelectionResult({ result }: { result: SelectionResponse }) {
@@ -46,21 +50,62 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Seçilen firma" value={winner?.name ?? "—"} hint={winner?.headquarters_city} />
-        <Stat label="Toplam ücret" value={formatMoney(result.total_cost)} />
-        <Stat
-          label="Rota mesafesi"
-          value={distance ? formatMiles(distance.miles) : "Bilinmiyor"}
-          hint={`${order.origin} → ${order.destination}`}
-          badge={distance ? DISTANCE_SOURCE_LABELS[distance.source] : undefined}
-        />
-        <Stat
-          label="Sipariş"
-          value={`${order.container_size} ft`}
-          hint={CARGO_LABELS[order.cargo_type]}
-        />
-      </div>
+      {order && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Seçilen firma" value={winner?.name ?? "—"} hint={winner?.headquarters_city} />
+          <Stat label="Toplam ücret" value={formatMoney(result.total_cost)} />
+          <Stat
+            label="Rota mesafesi"
+            value={distance ? formatMiles(distance.miles) : "Bilinmiyor"}
+            hint={`${order.origin} → ${order.destination}`}
+            badge={distance ? DISTANCE_SOURCE_LABELS[distance.source] : undefined}
+          />
+          <Stat label="Sipariş" value={`${order.container_size} ft`} hint={CARGO_LABELS[order.cargo_type]} />
+        </div>
+      )}
+
+      {result.confidence.source === "text" && Object.keys(result.confidence.fields).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Jev yorumu</CardTitle>
+            <CardDescription>
+              Serbest metinden okunan alanlar ve güven değerleri · en zayıf alan:{" "}
+              <span className="tabular-nums">{formatConfidence(result.confidence.min)}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Alan</TableHead>
+                  <TableHead>Jev&apos;in okuduğu</TableHead>
+                  <TableHead className="text-right">Güven</TableHead>
+                  <TableHead>Durum</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(result.confidence.fields).map(([field, f]) => (
+                  <TableRow key={field}>
+                    <TableCell>{FIELD_LABELS[field] ?? field}</TableCell>
+                    <TableCell className="font-medium">{f.value ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatConfidence(f.confidence)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={cn(
+                          "border-transparent",
+                          f.accepted ? "bg-success/10 text-success" : "bg-warning/15 text-foreground",
+                        )}
+                      >
+                        {f.accepted ? "Kabul" : "Onay gerekli"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {result.eligible_carriers.length > 0 && (
         <Card>

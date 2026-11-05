@@ -3,6 +3,7 @@ import type { components } from "./schema";
 type Schemas = components["schemas"];
 
 export type StructuredOrder = Schemas["StructuredOrder"];
+export type SelectCarrierRequest = Schemas["SelectCarrierRequest"];
 export type SelectionResponse = Schemas["SelectionResponse"];
 export type SelectionSummary = Schemas["SelectionSummary"];
 export type SelectionRecord = Schemas["SelectionRecord"];

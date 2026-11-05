@@ -8,11 +8,21 @@ from app.api import carriers, rules, selection
 from app.core.config import Settings
 from app.database.session import init_db, make_engine
 from app.services.distance import DistanceProvider
+from app.services.interpreter import Interpreter
 from app.services.osrm_provider import OsrmNominatimProvider
 
 
-def create_app(settings: Settings | None = None, *, distance_provider: DistanceProvider | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    distance_provider: DistanceProvider | None = None,
+    interpreter: Interpreter | None = None,
+) -> FastAPI:
     settings = settings or Settings()
+    if interpreter is None and settings.jev_enabled and settings.typesafe_api_key is not None:
+        from app.services.typesafe_interpreter import TypeSafeInterpreter
+
+        interpreter = TypeSafeInterpreter.from_settings(settings)
     if distance_provider is None and settings.distance_api_enabled:
         distance_provider = OsrmNominatimProvider(country_codes=settings.distance_country_codes)
     db_engine = make_engine(settings.database_url)
@@ -27,6 +37,7 @@ def create_app(settings: Settings | None = None, *, distance_provider: DistanceP
     app.state.settings = settings
     app.state.db_engine = db_engine
     app.state.distance_provider = distance_provider
+    app.state.interpreter = interpreter
 
     app.add_middleware(
         CORSMiddleware,

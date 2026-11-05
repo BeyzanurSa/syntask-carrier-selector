@@ -8,6 +8,8 @@ const STATUS_STYLES: Record<SelectionStatus, string> = {
   no_carrier: "bg-destructive/10 text-destructive",
   unknown_route: "bg-warning/15 text-foreground",
   invalid_order: "bg-muted text-muted-foreground",
+  needs_review: "bg-warning/15 text-foreground",
+  jev_unavailable: "bg-destructive/10 text-destructive",
 };
 
 export function StatusBadge({ status }: { status: SelectionStatus }) {

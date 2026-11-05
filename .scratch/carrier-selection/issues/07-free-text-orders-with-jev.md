@@ -4,12 +4,12 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The Jev API key is read only from `TYPESAFE_API_KEY`; it is never logged or exposed
-- [ ] Confidence below the threshold, a missing confidence, `unspecified` or `other_city` on any field gives `needs_review` with suggestions and a Turkish question (tested with a fake interpreter)
-- [ ] The response's `confidence.min` is the weakest field's confidence; structured Orders report source `structured` and null confidence
-- [ ] Interpreter failure gives `jev_unavailable` for text Orders; structured Orders are unaffected
-- [ ] Adapter tests with a stubbed SDK client cover choice and confidence mapping, missing confidence, sentinel options and SDK errors
-- [ ] The "Yeni Sipariş" page offers a free-text input, shows per-field confidence, and turns a Review into a prefilled, confirmable form
-- [ ] One manual run against the real Jev with the user's key succeeds for "Miami'den Orlando'ya 40'lık kuru yük konteyneri taşınacak."
+- [x] The Jev API key is read only from `TYPESAFE_API_KEY`; it is never logged or exposed
+- [x] Confidence below the threshold, a missing confidence, `unspecified` or `other_city` on any field gives `needs_review` with suggestions and a Turkish question (tested with a fake interpreter)
+- [x] The response's `confidence.min` is the weakest field's confidence; structured Orders report source `structured` and null confidence
+- [x] Interpreter failure gives `jev_unavailable` for text Orders; structured Orders are unaffected
+- [x] Adapter tests with a stubbed SDK client cover choice and confidence mapping, missing confidence, sentinel options and SDK errors
+- [x] The "Yeni Sipariş" page offers a free-text input, shows per-field confidence, and turns a Review into a prefilled, confirmable form
+- [x] One manual run against the real Jev with the user's key succeeds for "Miami'den Orlando'ya 40'lık kuru yük konteyneri taşınacak."

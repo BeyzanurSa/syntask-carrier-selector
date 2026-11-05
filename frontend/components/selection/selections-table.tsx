@@ -47,12 +47,16 @@ export function SelectionsTable({ selections }: { selections: SelectionSummary[]
             </TableCell>
             <TableCell className="font-medium">
               <Link href={`/selections/${s.id}`} className="hover:underline">
-                {s.origin} → {s.destination}
+                {s.origin ? (
+                  `${s.origin} → ${s.destination}`
+                ) : (
+                  <span className="text-muted-foreground line-clamp-1 max-w-56 font-normal italic">
+                    “{s.input_text}”
+                  </span>
+                )}
               </Link>
             </TableCell>
-            <TableCell>
-              {s.container_size} ft · {s.cargo_type}
-            </TableCell>
+            <TableCell>{s.container_size ? `${s.container_size} ft · ${s.cargo_type}` : "—"}</TableCell>
             <TableCell>
               <StatusBadge status={s.status} />
             </TableCell>

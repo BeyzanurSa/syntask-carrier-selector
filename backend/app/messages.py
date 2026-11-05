@@ -89,3 +89,32 @@ def won_on(
 
 def won_on_name(name: str, runner_up: str, ties: list[str]) -> str:
     return f"{name} seçildi: {', '.join(ties)}; eşitlik isim sırasıyla bozuldu ({runner_up} geride)."
+
+
+# Interpretation (Jev)
+JEV_UNAVAILABLE = (
+    "Jev'e ulaşılamadı; serbest metin sipariş yorumlanamadı. Lütfen siparişi form alanlarıyla girin."
+)
+NEEDS_REVIEW = "Sipariş metni yeterince net değil; taşıyıcı atanmadı. Lütfen işaretli alanları onaylayın."
+
+_FIELD_NAMES = {
+    "origin": "Çıkış şehri",
+    "destination": "Varış şehri",
+    "container_size": "Konteyner boyutu",
+    "cargo_type": "Yük tipi",
+}
+_FIELD_OPTIONS = {"container_size": "20 / 40 / 45 ft", "cargo_type": "Dry / Reefer / Hazardous"}
+
+
+def review_question(readings: dict[str, str | None]) -> str:
+    """One Turkish question per uncertain field, e.g. "Konteyner boyutu belirtilmemiş: 20 / 40 / 45 ft?"."""
+    parts = []
+    for field, value in readings.items():
+        name, options = _FIELD_NAMES[field], _FIELD_OPTIONS.get(field)
+        if value == "other_city":
+            parts.append(f"{name} tanınan şehirler arasında değil; lütfen şehri yazın.")
+        elif value in (None, "unspecified"):
+            parts.append(f"{name} belirtilmemiş" + (f": {options}?" if options else "; lütfen girin."))
+        else:
+            parts.append(f"{name} {value}{' ft' if field == 'container_size' else ''} mi?")
+    return " ".join(parts)

@@ -3,16 +3,19 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from app.api.deps import SelectionServiceDep, SessionDep
-from app.schemas.selection import SelectionRecord, SelectionResponse, SelectionSummary, StructuredOrder
+from app.schemas.selection import SelectCarrierRequest, SelectionRecord, SelectionResponse, SelectionSummary
 from app.services.selection_history import get_selection, list_selections
 
 router = APIRouter(tags=["selection"])
 
 
 @router.post("/select-carrier", response_model=SelectionResponse)
-def select_carrier(order: StructuredOrder, service: SelectionServiceDep) -> SelectionResponse:
-    """Pick the best carrier for an Order. Business outcomes are reported in `status`, always with HTTP 200."""
-    return service.run(order)
+def select_carrier(request: SelectCarrierRequest, service: SelectionServiceDep) -> SelectionResponse:
+    """Pick the best carrier for an Order given as free text or as fields.
+
+    Business outcomes (including needs_review and jev_unavailable) are reported in `status`, always with HTTP 200.
+    """
+    return service.run(request)
 
 
 @router.get("/selections", response_model=list[SelectionSummary])

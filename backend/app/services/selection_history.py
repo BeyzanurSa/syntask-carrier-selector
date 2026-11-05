@@ -13,10 +13,8 @@ def list_selections(session: Session, limit: int) -> list[SelectionSummary]:
             id=row.id,
             created_at=row.created_at,
             status=row.status,
-            origin=row.response["order"]["origin"],
-            destination=row.response["order"]["destination"],
-            container_size=row.input["container_size"],
-            cargo_type=row.input["cargo_type"],
+            input_text=row.input.get("text"),
+            **_order_fields(row),
             selected_carrier_name=row.selected_carrier_name,
             total_cost=row.total_cost,
         )
@@ -37,3 +35,9 @@ def get_selection(session: Session, selection_id: int) -> SelectionRecord | None
         status=row.status,
         response=row.response,
     )
+
+
+def _order_fields(row: Selection) -> dict:
+    """Route and load of the decided Order; empty when the text never became an Order (review, Jev down)."""
+    order = row.response.get("order") or {}
+    return {key: order.get(key) for key in ("origin", "destination", "container_size", "cargo_type")}

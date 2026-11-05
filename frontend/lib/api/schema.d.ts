@@ -32,7 +32,9 @@ export interface paths {
         put?: never;
         /**
          * Select Carrier
-         * @description Pick the best carrier for an Order. Business outcomes are reported in `status`, always with HTTP 200.
+         * @description Pick the best carrier for an Order given as free text or as fields.
+         *
+         *     Business outcomes (including needs_review and jev_unavailable) are reported in `status`, always with HTTP 200.
          */
         post: operations["select_carrier_select_carrier_post"];
         delete?: never;
@@ -295,6 +297,24 @@ export interface components {
              */
             warnings: string[];
         };
+        /** ConfidenceOut */
+        ConfidenceOut: {
+            /**
+             * Source
+             * @default structured
+             * @enum {string}
+             */
+            source: "text" | "structured";
+            /** Min */
+            min?: number | null;
+            /**
+             * Fields
+             * @default {}
+             */
+            fields: {
+                [key: string]: components["schemas"]["FieldConfidenceOut"];
+            };
+        };
         /** DistanceOut */
         DistanceOut: {
             /** Miles */
@@ -304,6 +324,15 @@ export interface components {
              * @enum {string}
              */
             source: "table" | "api";
+        };
+        /** FieldConfidenceOut */
+        FieldConfidenceOut: {
+            /** Value */
+            value: string | null;
+            /** Confidence */
+            confidence: number | null;
+            /** Accepted */
+            accepted: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -338,6 +367,17 @@ export interface components {
             /** Reasons */
             reasons: string[];
         };
+        /** ReviewOut */
+        ReviewOut: {
+            /** Fields */
+            fields: string[];
+            /** Suggestions */
+            suggestions: {
+                [key: string]: string;
+            };
+            /** Question */
+            question: string;
+        };
         /** RuleSet */
         RuleSet: {
             /** Constraints */
@@ -357,6 +397,37 @@ export interface components {
             labels: {
                 [key: string]: string;
             };
+        };
+        /**
+         * SelectCarrierRequest
+         * @description Exactly one form: free `text` (interpreted by Jev), or all four structured fields (Jev is skipped).
+         */
+        SelectCarrierRequest: {
+            /**
+             * Text
+             * @example null
+             */
+            text?: string | null;
+            /**
+             * Origin
+             * @example Miami
+             */
+            origin?: string | null;
+            /**
+             * Destination
+             * @example Orlando
+             */
+            destination?: string | null;
+            /**
+             * Container Size
+             * @example 40
+             */
+            container_size?: (20 | 40 | 45) | null;
+            /**
+             * Cargo Type
+             * @example Dry
+             */
+            cargo_type?: ("Dry" | "Reefer" | "Hazardous") | null;
         };
         /** SelectedCarrierOut */
         SelectedCarrierOut: {
@@ -383,17 +454,20 @@ export interface components {
             created_at: string;
             /**
              * Input Kind
-             * @constant
+             * @enum {string}
              */
-            input_kind: "structured";
-            input: components["schemas"]["StructuredOrder"];
+            input_kind: "structured" | "text";
+            /** Input */
+            input: {
+                [key: string]: unknown;
+            };
             /** Ranking Used */
             ranking_used: string[];
             /**
              * Status
              * @enum {string}
              */
-            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order" | "needs_review" | "jev_unavailable";
             response: components["schemas"]["SelectionResponse"];
         };
         /** SelectionResponse */
@@ -404,8 +478,8 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
-            order: components["schemas"]["StructuredOrder"];
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order" | "needs_review" | "jev_unavailable";
+            order?: components["schemas"]["StructuredOrder"] | null;
             selected_carrier?: components["schemas"]["SelectedCarrierOut"] | null;
             distance?: components["schemas"]["DistanceOut"] | null;
             /** Total Cost */
@@ -427,6 +501,14 @@ export interface components {
              * @default []
              */
             rules_used: string[];
+            /**
+             * @default {
+             *       "source": "structured",
+             *       "fields": {}
+             *     }
+             */
+            confidence: components["schemas"]["ConfidenceOut"];
+            review?: components["schemas"]["ReviewOut"] | null;
         };
         /**
          * SelectionSummary
@@ -444,21 +526,17 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order";
+            status: "selected" | "no_carrier" | "unknown_route" | "invalid_order" | "needs_review" | "jev_unavailable";
+            /** Input Text */
+            input_text: string | null;
             /** Origin */
-            origin: string;
+            origin: string | null;
             /** Destination */
-            destination: string;
-            /**
-             * Container Size
-             * @enum {integer}
-             */
-            container_size: 20 | 40 | 45;
-            /**
-             * Cargo Type
-             * @enum {string}
-             */
-            cargo_type: "Dry" | "Reefer" | "Hazardous";
+            destination: string | null;
+            /** Container Size */
+            container_size: (20 | 40 | 45) | null;
+            /** Cargo Type */
+            cargo_type: ("Dry" | "Reefer" | "Hazardous") | null;
             /** Selected Carrier Name */
             selected_carrier_name: string | null;
             /** Total Cost */
@@ -549,7 +627,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StructuredOrder"];
+                "application/json": components["schemas"]["SelectCarrierRequest"];
             };
         };
         responses: {

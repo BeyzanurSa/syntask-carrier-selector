@@ -6,10 +6,10 @@ import { Loader2, RotateCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
-import type { StructuredOrder } from "@/lib/api/types";
+import type { SelectCarrierRequest } from "@/lib/api/types";
 
 /** Submits a stored Order again under the current rules; the result is a new Selection. */
-export function RerunButton({ order }: { order: StructuredOrder }) {
+export function RerunButton({ input }: { input: SelectCarrierRequest }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -18,7 +18,7 @@ export function RerunButton({ order }: { order: StructuredOrder }) {
     setPending(true);
     setFailed(false);
     try {
-      const { data } = await api.POST("/select-carrier", { body: order });
+      const { data } = await api.POST("/select-carrier", { body: input });
       if (data?.selection_id != null) {
         router.push(`/selections/${data.selection_id}`);
         return;

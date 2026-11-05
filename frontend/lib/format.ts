@@ -29,7 +29,20 @@ export const STATUS_LABELS: Record<SelectionStatus, string> = {
   no_carrier: "Uygun taşıyıcı yok",
   unknown_route: "Rota mesafesi bilinmiyor",
   invalid_order: "Geçersiz sipariş",
+  needs_review: "Manuel inceleme gerekli",
+  jev_unavailable: "Jev'e ulaşılamadı",
 };
+
+export const FIELD_LABELS: Record<string, string> = {
+  origin: "Çıkış şehri",
+  destination: "Varış şehri",
+  container_size: "Konteyner boyutu",
+  cargo_type: "Yük tipi",
+};
+
+export function formatConfidence(value: number | null | undefined): string {
+  return value == null ? "yok" : value.toFixed(2);
+}
 
 export const DISTANCE_SOURCE_LABELS: Record<"table" | "api", string> = {
   table: "Case tablosu",

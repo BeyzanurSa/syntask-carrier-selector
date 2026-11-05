@@ -19,3 +19,7 @@ class Settings(BaseSettings):
     # Road distances for routes outside the case table (Nominatim + OSRM). Tests turn this off.
     distance_api_enabled: bool = True
     distance_country_codes: str = "us"
+    # Jev (TypeSafe) interprets free-text Orders. Needs TYPESAFE_API_KEY. Tests turn this off.
+    jev_enabled: bool = True
+    jev_model: str = "jev-latest"
+    jev_timeout_seconds: float = 20.0

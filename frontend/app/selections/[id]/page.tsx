@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { RerunButton } from "@/components/selection/rerun-button";
 import { SelectionResult } from "@/components/selection/selection-result";
 import { fetchSelection } from "@/lib/api/server";
+import type { SelectCarrierRequest } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 
 export async function generateMetadata(props: PageProps<"/selections/[id]">) {
@@ -35,7 +36,7 @@ export default async function SelectionDetailPage(props: PageProps<"/selections/
         description={formatDateTime(record.created_at)}
       />
       <div className="mb-6">
-        <RerunButton order={record.input} />
+        <RerunButton input={record.input as SelectCarrierRequest} />
         <p className="text-muted-foreground mt-2 text-xs">
           Aynı siparişi güncel kurallarla yeniden çalıştırır ve yeni bir seçim kaydı oluşturur. Bu kayıt değişmez.
         </p>
