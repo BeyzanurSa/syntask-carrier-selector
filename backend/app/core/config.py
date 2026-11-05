@@ -16,3 +16,6 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:3000"
     database_url: str = f"sqlite:///{BACKEND_DIR / 'carrier_selector.db'}"
     rules_path: Path = BACKEND_DIR.parent / "rules.yaml"
+    # Road distances for routes outside the case table (Nominatim + OSRM). Tests turn this off.
+    distance_api_enabled: bool = True
+    distance_country_codes: str = "us"

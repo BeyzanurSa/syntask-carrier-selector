@@ -36,6 +36,14 @@ def unsupported_cargo(cargo: str, supported: Iterable[str]) -> str:
     return f"{cargo} yük tipi desteklenmiyor (desteklenen: {_join(supported)})"
 
 
+# Carriers
+def hq_distance_unknown(city: str) -> str:
+    return (
+        f"{city} için mesafe bilinmiyor: merkez yakınlığı ölçülemez, "
+        "bu firma o kriterde sıralamanın sonuna kalır."
+    )
+
+
 # Ranking
 HQ_DISTANCE_UNKNOWN = "Merkezin çıkış şehrine mesafesi bilinmiyor"
 HQ_DISTANCE_UNKNOWN_SHORT = "bilinmiyor"

@@ -235,6 +235,66 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * CarrierWriteOut
+         * @description Create/update response: the saved carrier plus non-blocking warnings.
+         */
+        CarrierWriteOut: {
+            /** Name */
+            name: string;
+            /** Headquarters City */
+            headquarters_city: string;
+            /**
+             * Min Distance
+             * @description Miles, inclusive. Empty = no lower bound.
+             */
+            min_distance?: number | null;
+            /**
+             * Max Distance
+             * @description Miles, inclusive. Empty = unlimited.
+             */
+            max_distance?: number | null;
+            /** Supported Container Sizes */
+            supported_container_sizes: (20 | 40 | 45)[];
+            /** Supported Cargo Types */
+            supported_cargo_types: ("Dry" | "Reefer" | "Hazardous")[];
+            /** Price Per Mile */
+            price_per_mile: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Description
+             * @description Carrier note. Never a Constraint.
+             */
+            description?: string | null;
+            /**
+             * Attributes
+             * @description Extra data for future ranking criteria.
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
+        };
         /** DistanceOut */
         DistanceOut: {
             /** Miles */
@@ -614,7 +674,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CarrierOut"];
+                    "application/json": components["schemas"]["CarrierWriteOut"];
                 };
             };
             /** @description Validation Error */
@@ -680,7 +740,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CarrierOut"];
+                    "application/json": components["schemas"]["CarrierWriteOut"];
                 };
             };
             /** @description Validation Error */

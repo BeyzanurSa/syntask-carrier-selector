@@ -23,9 +23,16 @@ def get_selection_service(request: Request, session: SessionDep) -> SelectionSer
     state = request.app.state
     return SelectionService(
         session=session,
-        distances=DistanceService(state.distance_provider),
+        distances=DistanceService(state.distance_provider, session),
         rules=RulesStore(state.settings.rules_path),
     )
 
 
 SelectionServiceDep = Annotated[SelectionService, Depends(get_selection_service)]
+
+
+def get_distance_service(request: Request, session: SessionDep) -> DistanceService:
+    return DistanceService(request.app.state.distance_provider, session)
+
+
+DistanceServiceDep = Annotated[DistanceService, Depends(get_distance_service)]

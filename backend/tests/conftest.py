@@ -15,14 +15,23 @@ REPO_RULES = Path(__file__).resolve().parents[2] / "rules.yaml"
 class FakeDistanceProvider:
     """In-memory stand-in for the road distance API. Unknown pairs return None."""
 
+    name = "fake"
+
     def __init__(self, distances: dict[tuple[str, str], int] | None = None, fail: bool = False):
         self.distances = {frozenset(k): Decimal(v) for k, v in (distances or {}).items()}
         self.fail = fail
+        self.calls: list[tuple[str, str]] = []
 
     def road_distance_miles(self, a: str, b: str) -> Decimal | None:
+        self.calls.append((a, b))
         if self.fail:
             raise DistanceProviderError("provider down")
         return self.distances.get(frozenset((a, b)))
+
+    def knows_city(self, city: str) -> bool:
+        if self.fail:
+            raise DistanceProviderError("provider down")
+        return any(city in pair for pair in self.distances)
 
 
 @pytest.fixture
@@ -38,7 +47,8 @@ def make_client(rules_path: Path):
     clients = []
 
     def _make(distance_provider: FakeDistanceProvider | None = None) -> TestClient:
-        settings = Settings(database_url="sqlite://", rules_path=rules_path)
+        # The real distance API is never used in tests; a fake provider is passed in when needed.
+        settings = Settings(database_url="sqlite://", rules_path=rules_path, distance_api_enabled=False)
         client = TestClient(create_app(settings, distance_provider=distance_provider))
         client.__enter__()  # runs startup: create tables + seed the case carriers
         clients.append(client)

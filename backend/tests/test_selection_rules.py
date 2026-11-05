@@ -128,7 +128,7 @@ def test_route_from_provider_reports_api_source(make_client):
 
     result = select(client, "Miami", "Boston", 20, "Dry")
 
-    assert result["distance"] == {"miles": "1500", "source": "api"}
+    assert result["distance"] == {"miles": "1500.0", "source": "api"}
     assert result["selected_carrier"]["name"] == "B-Logistics"
 
 

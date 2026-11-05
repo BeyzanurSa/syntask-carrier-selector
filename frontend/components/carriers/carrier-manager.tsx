@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { CarrierFormDialog } from "@/components/carriers/carrier-form-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Carrier | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ name: string; warnings: string[] } | null>(null);
 
   // Server Component data is re-fetched after every change.
   const refresh = () => router.refresh();
@@ -95,6 +97,17 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
+      {notice && notice.warnings.length > 0 && (
+        <Alert className="border-warning/50 bg-warning/10">
+          <AlertTriangle className="text-warning" aria-hidden />
+          <AlertTitle>{notice.name} kaydedildi, bir uyarı var</AlertTitle>
+          <AlertDescription className="text-foreground">
+            {notice.warnings.map((w) => (
+              <p key={w}>{w}</p>
+            ))}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Table>
         <TableHeader>
@@ -160,7 +173,10 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
           carrier={editing.carrier}
           open
           onOpenChange={(open) => !open && setEditing(null)}
-          onSaved={refresh}
+          onSaved={(name, warnings) => {
+            setNotice({ name, warnings });
+            refresh();
+          }}
         />
       )}
 

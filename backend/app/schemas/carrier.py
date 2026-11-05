@@ -58,3 +58,9 @@ class CarrierOut(CarrierIn):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class CarrierWriteOut(CarrierOut):
+    """Create/update response: the saved carrier plus non-blocking warnings."""
+
+    warnings: list[str] = []

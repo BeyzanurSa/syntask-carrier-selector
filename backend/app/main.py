@@ -8,10 +8,13 @@ from app.api import carriers, rules, selection
 from app.core.config import Settings
 from app.database.session import init_db, make_engine
 from app.services.distance import DistanceProvider
+from app.services.osrm_provider import OsrmNominatimProvider
 
 
 def create_app(settings: Settings | None = None, *, distance_provider: DistanceProvider | None = None) -> FastAPI:
     settings = settings or Settings()
+    if distance_provider is None and settings.distance_api_enabled:
+        distance_provider = OsrmNominatimProvider(country_codes=settings.distance_country_codes)
     db_engine = make_engine(settings.database_url)
 
     @asynccontextmanager

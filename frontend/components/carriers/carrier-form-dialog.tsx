@@ -99,7 +99,7 @@ export function CarrierFormDialog({
   carrier?: Carrier;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaved: () => void;
+  onSaved: (name: string, warnings: string[]) => void;
 }) {
   const [form, setForm] = useState<FormState>(() => toForm(carrier));
   const [error, setError] = useState<string | null>(null);
@@ -116,13 +116,13 @@ export function CarrierFormDialog({
     setSaving(true);
     setError(null);
     try {
-      const { error: apiError } = carrier
+      const { data, error: apiError } = carrier
         ? await api.PUT("/carriers/{carrier_id}", { params: { path: { carrier_id: carrier.id } }, body: payload })
         : await api.POST("/carriers", { body: payload });
-      if (apiError) {
+      if (apiError || !data) {
         setError(apiErrorMessage(apiError));
       } else {
-        onSaved();
+        onSaved(data.name, data.warnings ?? []);
         onOpenChange(false);
       }
     } catch {

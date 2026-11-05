@@ -25,6 +25,18 @@ class Carrier(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_now)
 
 
+class DistanceCache(SQLModel, table=True):
+    """Road distances obtained from the distance provider. city_a < city_b, so each pair is stored once."""
+
+    __tablename__ = "distance_cache"
+
+    city_a: str = Field(primary_key=True)
+    city_b: str = Field(primary_key=True)
+    miles: Decimal = Field(max_digits=10, decimal_places=1)
+    provider: str
+    fetched_at: datetime = Field(default_factory=_now)
+
+
 class Selection(SQLModel, table=True):
     """Immutable record of one decision. `response` is the full API response, so it never needs recomputing."""
 
