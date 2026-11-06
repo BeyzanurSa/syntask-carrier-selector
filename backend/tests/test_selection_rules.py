@@ -160,3 +160,12 @@ def test_malformed_or_unsupported_order_fields_are_rejected_with_422(client, bod
     response = client.post("/select-carrier", json=body)
 
     assert response.status_code == 422
+
+
+def test_mixed_case_city_names_are_kept_as_typed(make_client):
+    client = make_client(FakeDistanceProvider({("Miami", "McAllen"): 1400}))
+
+    result = select(client, "miami", "McAllen", 20, "Dry")
+
+    assert result["order"]["origin"] == "Miami"
+    assert result["order"]["destination"] == "McAllen"

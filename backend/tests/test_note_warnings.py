@@ -44,7 +44,7 @@ def test_only_eligible_carriers_with_notes_are_sent_to_jev(make_client):
 
     order, notes = interpreter.note_calls[0]
     assert notes == {"S-Logistics": NOTE}
-    assert order == {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_type": "Dry"}
+    assert order == {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_types": ["Dry"]}
 
 
 def test_no_notes_means_no_jev_call_and_nothing_left_unchecked(make_client):

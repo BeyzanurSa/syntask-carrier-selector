@@ -90,7 +90,7 @@ Jev, TypeSafe'in **System One** modelidir: serbest metin üretmez; verilen seçe
 - Sıralama, eşitlik bozma (en son firma adı), "neden kaybetti" açıklaması
 - Not uyarısı eşiği (uyarı seçimi **asla** değiştirmez)
 
-Deterministik kod "hata yapmaz" demiyoruz: **aynı girdi ve aynı kural setiyle her zaman aynı sonucu üretir**, test edilebilir ve denetlenebilir. Yazılım hatalarına karşı korumayı 105 test sağlıyor.
+Deterministik kod "hata yapmaz" demiyoruz: **aynı girdi ve aynı kural setiyle her zaman aynı sonucu üretir**, test edilebilir ve denetlenebilir. Yazılım hatalarına karşı korumayı 131 test sağlıyor.
 
 **Neden `unspecified` seçeneği?** Jev'i belirtilmemiş bir alan için bir değer seçmeye zorlamamak için. Örneğin *"Need a reefer box from Ft. Lauderdale to Miami"* metninde boyut yok; Jev `unspecified` (güven 1.00) der ve sistem soru sorar. Bu, TypeSafe dokümanlarındaki "sentinel seçenek" kalıbıdır.
 
@@ -107,9 +107,11 @@ Neden ortalama değil **en zayıf alan**? Bir alan 0.99, diğeri 0.40 olabilir; 
 
 ## Seçim algoritması ve kural seti
 
-1. **Zorunlu koşullar** (`rules.yaml → constraints`): aktiflik, mesafe aralığı (**sınırlar dahil**: ≤ 300, ≥ 250), konteyner, yük tipi. Elenen firmanın **tüm** gerekçeleri listelenir.
+1. **Zorunlu koşullar** (`rules.yaml → constraints`): aktiflik, mesafe aralığı (**sınırlar dahil**: ≤ 300, ≥ 250), konteyner, yük tipi. Bir siparişte **birden fazla yük tipi** olabilir (ör. soğutmalı tehlikeli madde); firma hepsini desteklemeli ve desteklemediği her tip ayrı gerekçe olur. Elenen firmanın **tüm** gerekçeleri listelenir.
 2. **Ücret**: `rota mesafesi × mil başına ücret`.
-3. **Sıralama** (`rules.yaml → ranking`, açık kriterler sırayla): varsayılan `total_cost`, sonra `hq_proximity` (firma merkezinin çıkış şehrine uzaklığı; bilinmiyorsa sona). Hepsi eşitse firma adı.
+3. **Sıralama** (`rules.yaml → ranking`, açık kriterler sırayla): varsayılan `total_cost`, sonra `hq_proximity` (firma merkezinin çıkış şehrine uzaklığı; bilinmiyorsa sona). Hepsi eşitse firma adı. İki ek kriter hazır ama varsayılan olarak **kapalı** (case'in kuralı değişmesin diye); Kurallar sayfasından açılır:
+   - `reliability` (Güvenilirlik): firmanın %0–100 puanı (`attributes.reliability`, 0–1); yüksek olan önde, puanı olmayan sona.
+   - `hq_to_destination` (Dönüş yakınlığı): merkezin varış şehrine uzaklığı; boş dönüş yolu kısa olan önde.
 4. Uygun firma yoksa `no_carrier` ve her firmanın gerekçesi.
 
 Yanıtta iki ayrı liste var: **`rejected_carriers`** (bir koşulu sağlamayanlar) ve **`eligible_carriers`** (uygun ama sıralamada geride kalanlar, "neden kaybetti" ile). "Ücreti daha yüksek" bir firma elenmiş değildir; bu ayrım bilinçli.
@@ -127,7 +129,7 @@ thresholds:
   note_warning: 0.7
 ```
 
-**Yeni kriter eklemek** (ör. `reliability`):
+**Yeni kriter eklemek** (`reliability` ve `hq_to_destination` tam olarak böyle eklendi):
 1. `backend/app/engine/ranking.py` içinde bir sınıf yaz (`key()` küçük olan iyi; yüksek güvenilirlik için `-reliability`), değeri firmanın `attributes` alanından oku.
 2. `RANKING_CRITERIA` registry'sine ekle.
 3. `rules.yaml`'a adını yaz veya arayüzden aç. Başka hiçbir dosya değişmez; veritabanı şeması da değişmez.
@@ -142,6 +144,7 @@ Sıra: **case tablosu (simetrik) → veritabanı cache'i → Nominatim (geocodin
 - Gerçek API, case tablosuyla tutarlı: Miami → Orlando **233.3** mil (tablo 235), Miami → Atlanta **660.6** mil (tablo 660).
 - Anahtarsız public servisler (SLA yok): 5 sn timeout, açıklayıcı User-Agent, saniyede en fazla 1 geocoding isteği; her hata `unknown_route` olur. Başarılı sonuçlar cache'lenir.
 - Merkez şehri ölçülemeyen bir firma kaydedilebilir ama uyarı alır (merkez yakınlığında sona kalır).
+- **Yazım hatası koruması:** şehir alanları bilinen şehirleri önerir (`GET /cities`). Listede olmayan bir ad `GET /cities/check` ile kontrol edilir; bilinen bir şehre çok benziyorsa (`difflib`, eşik 0.8) "Miami mi demek istediniz?" önerilir. Böylece "Miammi" geocoder'a gidip yanlış bir şehirle fiyatlanmaz. Yeni şehir girmek yine serbest.
 - Canlı demodan önce `python -m app.warm_cache` ile kullanılacak rotalar cache'e alınır; demo internete bağımlı kalmaz.
 
 ## Teknoloji seçimleri
@@ -175,7 +178,7 @@ carrier-selector/
 │   │   ├── messages.py             # Türkçe metinler
 │   │   ├── warm_cache.py           # demo öncesi mesafe cache'i
 │   │   └── export_openapi.py       # frontend tip üretimi için şema
-│   ├── tests/                      # 105 test (HTTP seviyesi + 2 adapter)
+│   ├── tests/                      # 131 test (HTTP seviyesi + 2 adapter)
 │   ├── .env.example
 │   └── requirements.txt
 ├── frontend/
@@ -232,10 +235,12 @@ Backend şeması değişirse frontend tiplerini yenileyin: `cd frontend && npm r
 | GET | `/carriers/{id}` | Firma detayı |
 | PUT | `/carriers/{id}` | Firmayı güncelle (aynı isim 409, yok 404, geçersiz 422) |
 | DELETE | `/carriers/{id}` | Firmayı sil (204; geçmiş seçimler etkilenmez) |
-| POST | `/select-carrier` | Taşıyıcı seç: `{text}` **veya** 4 alan |
+| POST | `/select-carrier` | Taşıyıcı seç: `{text}` **veya** 4 alan (`cargo_types` liste; eski tekil `cargo_type` da kabul edilir) |
 | GET | `/selections?limit=` | Seçim geçmişi (yeniden eskiye) |
 | GET | `/selections/{id}` | Seçim kaydı (snapshot) |
 | GET / PUT | `/rules` | Kural setini oku / değiştir (geçersiz isim 400, dosyaya dokunmaz) |
+| GET | `/cities` | Bilinen şehirler (case tablosu, firma merkezleri, cache) |
+| GET | `/cities/check?name=` | `{known, normalized, suggestion}`: yazım hatası önerisi |
 | GET | `/health` | Sağlık kontrolü |
 
 `/select-carrier` iş sonuçlarını her zaman HTTP 200 ve `status` ile döner: `selected`, `no_carrier`, `unknown_route`, `invalid_order`, `needs_review`, `jev_unavailable`. Hatalı istek gövdesi 422'dir.
@@ -251,7 +256,7 @@ curl -X POST localhost:8000/select-carrier -H 'content-type: application/json' \
 {
   "selection_id": 12,
   "status": "selected",
-  "order": {"origin": "Miami", "destination": "Atlanta", "container_size": 20, "cargo_type": "Reefer"},
+  "order": {"origin": "Miami", "destination": "Atlanta", "container_size": 20, "cargo_types": ["Reefer"]},
   "selected_carrier": {"id": 2, "name": "B-Logistics", "headquarters_city": "Fort Lauderdale", "hq_distance": "30"},
   "distance": {"miles": "660", "source": "table"},
   "total_cost": "660.00",
@@ -307,7 +312,7 @@ curl -X POST localhost:8000/select-carrier -H 'content-type: application/json' \
 ## Testler
 
 ```bash
-cd backend && .venv/bin/pytest -q          # 105 test, ağ ve gerçek Jev gerekmez
+cd backend && .venv/bin/pytest -q          # 131 test, ağ ve gerçek Jev gerekmez
 cd frontend && npm run typecheck && npm run lint
 ```
 
@@ -319,6 +324,9 @@ cd frontend && npm run typecheck && npm run lint
 | `test_selection_rules.py` | **200 / 250 / 300 mil** sınırları (249, 301 dahil), konteyner/yük uyumsuzluğu, eşitlikte yakınlık ve isim, bilinmeyen rota, geçersiz sipariş |
 | `test_carriers.py` | CRUD, 409/404/422, yeni firmanın bir sonraki seçimde kullanılması, pasif firma, silinen firmanın geçmişi bozmaması |
 | `test_rules.py` | Sıralama önceliğini değiştirip aynı siparişin sonucunun değişmesi, yorumların korunması, geçersiz kural reddi |
+| `test_ranking_criteria.py` | Güvenilirlik ve dönüş yakınlığı kriterleri, puanı olmayanın sona kalması, puan doğrulaması |
+| `test_multi_cargo.py` | Çoklu yük tipi, eksik her tipin ayrı gerekçesi, eski tekil `cargo_type` istekleri ve eski snapshot'lar |
+| `test_cities.py` | Bilinen şehir listesi ve "bunu mu demek istediniz" önerisi |
 | `test_free_text_orders.py` | Düşük confidence, `unspecified`, `other_city`, confidence yok, eşiğin `rules.yaml`'dan gelmesi, **Jev API hatası** |
 | `test_note_warnings.py` | Not uyarısının seçimi değiştirmemesi, eşik, kontrol edilemeyen notlar |
 | `test_distances.py` | Cache, tablonun önceliği, başarısız sorguların cache'lenmemesi, merkez uyarısı |

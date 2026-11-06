@@ -138,6 +138,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Cities
+         * @description Cities the system already knows: case table, carrier HQs and cached routes.
+         */
+        get: operations["list_cities_cities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cities/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check */
+        get: operations["check_cities_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -297,6 +334,15 @@ export interface components {
              */
             warnings: string[];
         };
+        /** CityCheck */
+        CityCheck: {
+            /** Known */
+            known: boolean;
+            /** Normalized */
+            normalized: string;
+            /** Suggestion */
+            suggestion: string | null;
+        };
         /** ConfidenceOut */
         ConfidenceOut: {
             /**
@@ -433,10 +479,12 @@ export interface components {
              */
             container_size?: (20 | 40 | 45) | null;
             /**
-             * Cargo Type
-             * @example Dry
+             * Cargo Types
+             * @example [
+             *       "Dry"
+             *     ]
              */
-            cargo_type?: ("Dry" | "Reefer" | "Hazardous") | null;
+            cargo_types?: ("Dry" | "Reefer" | "Hazardous")[] | null;
         };
         /** SelectedCarrierOut */
         SelectedCarrierOut: {
@@ -554,8 +602,8 @@ export interface components {
             destination: string | null;
             /** Container Size */
             container_size: (20 | 40 | 45) | null;
-            /** Cargo Type */
-            cargo_type: ("Dry" | "Reefer" | "Hazardous") | null;
+            /** Cargo Types */
+            cargo_types: ("Dry" | "Reefer" | "Hazardous")[] | null;
             /** Selected Carrier Name */
             selected_carrier_name: string | null;
             /** Total Cost */
@@ -580,11 +628,12 @@ export interface components {
              */
             container_size: 20 | 40 | 45;
             /**
-             * Cargo Type
-             * @example Dry
-             * @enum {string}
+             * Cargo Types
+             * @example [
+             *       "Dry"
+             *     ]
              */
-            cargo_type: "Dry" | "Reefer" | "Hazardous";
+            cargo_types: ("Dry" | "Reefer" | "Hazardous")[];
         };
         /** Thresholds */
         Thresholds: {
@@ -920,6 +969,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RulesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cities_cities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    check_cities_check_get: {
+        parameters: {
+            query: {
+                name: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CityCheck"];
                 };
             };
             /** @description Validation Error */

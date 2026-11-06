@@ -59,7 +59,7 @@ def build_questions(known_cities: list[str]) -> dict[str, Choice]:
 def describe_order(order: dict) -> str:
     return (
         f"Container transport order: from {order['origin']} to {order['destination']}, "
-        f"{order['container_size']}-foot container, {order['cargo_type']} cargo."
+        f"{order['container_size']}-foot container, {' and '.join(order['cargo_types'])} cargo."
     )
 
 

@@ -30,7 +30,7 @@ def select_carrier(
     candidates: list[Candidate] = []
     rejected: list[Rejection] = []
     for carrier in carriers:
-        reasons = [r for c in constraints if (r := c.check(carrier, ctx)) is not None]
+        reasons = [reason for c in constraints for reason in c.check(carrier, ctx)]
         if reasons:
             rejected.append(Rejection(carrier, reasons))
         else:
@@ -40,7 +40,7 @@ def select_carrier(
         return EngineOutcome(None, [], rejected, messages.NO_ELIGIBLE_CARRIER)
 
     # The carrier name is the last key, so the result never depends on insertion order.
-    ranked = sorted(candidates, key=lambda c: (*(k for crit in criteria for k in crit.key(c)), c.carrier.name))
+    ranked = sorted(candidates, key=lambda c: (*(k for crit in criteria for k in crit.key(c, ctx)), c.carrier.name))
     winner, rest = ranked[0], ranked[1:]
     outranked = [Outranked(c, _explain_loss(c, winner, criteria, ctx)) for c in rest]
     reason = _explain_win(winner, rest[0] if rest else None, criteria, ctx)
@@ -52,13 +52,15 @@ def _to_candidate(carrier: CarrierSpec, ctx: OrderContext) -> Candidate:
     return Candidate(carrier, total, ctx.hq_distance(carrier.headquarters_city, ctx.order.origin))
 
 
-def _deciding_criterion(a: Candidate, b: Candidate, criteria: list[RankingCriterion]) -> RankingCriterion | None:
+def _deciding_criterion(
+    a: Candidate, b: Candidate, criteria: list[RankingCriterion], ctx: OrderContext
+) -> RankingCriterion | None:
     """The first criterion on which a and b differ, or None if they tie on all of them."""
-    return next((c for c in criteria if c.key(a) != c.key(b)), None)
+    return next((c for c in criteria if c.key(a, ctx) != c.key(b, ctx)), None)
 
 
 def _explain_loss(cand: Candidate, winner: Candidate, criteria: list[RankingCriterion], ctx: OrderContext) -> str:
-    deciding = _deciding_criterion(cand, winner, criteria)
+    deciding = _deciding_criterion(cand, winner, criteria, ctx)
     if deciding is None:
         return messages.LOST_ON_NAME
     return deciding.explain_loss(cand, winner, ctx)
@@ -74,7 +76,7 @@ def _explain_win(
     if runner_up is None:
         return messages.only_eligible(name, winner.total_cost)
 
-    deciding = _deciding_criterion(winner, runner_up, criteria)
+    deciding = _deciding_criterion(winner, runner_up, criteria, ctx)
     ties = criteria[: criteria.index(deciding)] if deciding else criteria
     tie_parts = [messages.tie_on(c.label, c.describe(winner, ctx)) for c in ties]
     if deciding is None:

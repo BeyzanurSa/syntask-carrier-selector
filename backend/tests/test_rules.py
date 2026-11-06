@@ -16,7 +16,9 @@ def test_current_rule_set_is_returned_with_labels(client):
     rules = client.get("/rules").json()
 
     assert rules["constraints"] == ["active", "distance_range", "container_size", "cargo_type"]
-    assert rules["ranking"] == ranking(("total_cost", True), ("hq_proximity", True))
+    assert rules["ranking"] == ranking(
+        ("total_cost", True), ("hq_proximity", True), ("reliability", False), ("hq_to_destination", False)
+    )
     assert rules["thresholds"] == {"field_confidence": 0.75, "note_warning": 0.7}
     assert rules["labels"]["total_cost"] == "Toplam ücret"
     assert rules["labels"]["distance_range"]

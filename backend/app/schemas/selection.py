@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 ContainerSize = Literal[20, 40, 45]
 CargoType = Literal["Dry", "Reefer", "Hazardous"]
@@ -11,11 +11,26 @@ SelectionStatus = Literal[
 ]
 
 
+def _legacy_cargo_type(data):
+    """Accept the old single `cargo_type` field (old clients and stored snapshots) as `cargo_types`."""
+    if isinstance(data, dict) and "cargo_type" in data and "cargo_types" not in data:
+        data = {**data, "cargo_types": [data["cargo_type"]] if data["cargo_type"] is not None else None}
+        del data["cargo_type"]
+    return data
+
+
 class StructuredOrder(BaseModel):
     origin: str = Field(min_length=1, examples=["Miami"])
     destination: str = Field(min_length=1, examples=["Orlando"])
     container_size: ContainerSize = Field(examples=[40])
-    cargo_type: CargoType = Field(examples=["Dry"])
+    cargo_types: list[CargoType] = Field(min_length=1, examples=[["Dry"]])  # a carrier must support all
+
+    _legacy = model_validator(mode="before")(_legacy_cargo_type)
+
+    @field_validator("cargo_types")
+    @classmethod
+    def deduplicate(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(values))
 
 
 class SelectCarrierRequest(BaseModel):
@@ -25,11 +40,13 @@ class SelectCarrierRequest(BaseModel):
     origin: str | None = Field(default=None, min_length=1, examples=["Miami"])
     destination: str | None = Field(default=None, min_length=1, examples=["Orlando"])
     container_size: ContainerSize | None = Field(default=None, examples=[40])
-    cargo_type: CargoType | None = Field(default=None, examples=["Dry"])
+    cargo_types: list[CargoType] | None = Field(default=None, min_length=1, examples=[["Dry"]])
+
+    _legacy = model_validator(mode="before")(_legacy_cargo_type)
 
     @model_validator(mode="after")
     def exactly_one_form(self) -> Self:
-        structured = [self.origin, self.destination, self.container_size, self.cargo_type]
+        structured = [self.origin, self.destination, self.container_size, self.cargo_types]
         has_text = self.text is not None
         if has_text and any(v is not None for v in structured):
             raise ValueError("Ya serbest metin ya da yapılandırılmış alanlar gönderin, ikisini birden değil")
@@ -47,7 +64,7 @@ class SelectCarrierRequest(BaseModel):
             origin=self.origin,
             destination=self.destination,
             container_size=self.container_size,
-            cargo_type=self.cargo_type,
+            cargo_types=self.cargo_types,
         )
 
 
@@ -126,7 +143,7 @@ class SelectionSummary(BaseModel):
     origin: str | None
     destination: str | None
     container_size: ContainerSize | None
-    cargo_type: CargoType | None
+    cargo_types: list[CargoType] | None
     selected_carrier_name: str | None
     total_cost: Decimal | None
 

@@ -61,7 +61,7 @@ export function SelectionsTable({ selections }: { selections: SelectionSummary[]
               </div>
             </TableCell>
             <TableCell className="hidden md:table-cell">
-              {s.container_size ? `${s.container_size} ft · ${s.cargo_type}` : "—"}
+              {s.container_size ? `${s.container_size} ft · ${s.cargo_types?.join(" + ")}` : "—"}
             </TableCell>
             <TableCell>
               <StatusBadge status={s.status} />

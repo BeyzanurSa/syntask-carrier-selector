@@ -27,7 +27,7 @@ class OrderSpec:
     origin: str
     destination: str
     container_size: int
-    cargo_type: str
+    cargo_types: tuple[str, ...]
 
 
 # Distance in miles between two cities, or None when it cannot be measured.

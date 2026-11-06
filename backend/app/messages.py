@@ -58,6 +58,26 @@ def hq_farther_by(origin: str, difference: Decimal) -> str:
     return f"Merkezi çıkış şehrine ({origin}) {miles(difference)} daha uzak"
 
 
+RELIABILITY_MISSING = "Güvenilirlik puanı yok"
+RELIABILITY_MISSING_SHORT = "puan yok"
+
+
+def percent(score: float) -> str:
+    return f"%{score * 100:.0f}"
+
+
+def reliability_lower_by(difference: float) -> str:
+    return f"Güvenilirlik {difference * 100:.0f} puan daha düşük"
+
+
+def return_farther_by(destination: str, difference: Decimal) -> str:
+    return f"Merkezi varış şehrine ({destination}) {miles(difference)} daha uzak"
+
+
+def return_distance_unknown(destination: str) -> str:
+    return f"Merkezin varış şehrine ({destination}) mesafesi bilinmiyor"
+
+
 # Outcomes
 NO_ELIGIBLE_CARRIER = "Uygun taşıyıcı bulunamadı: hiçbir firma tüm zorunlu koşulları sağlamıyor."
 SAME_CITY = "Çıkış ve varış şehri aynı olamaz."

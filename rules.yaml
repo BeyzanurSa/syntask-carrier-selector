@@ -12,6 +12,10 @@ ranking:
     enabled: true
   - name: hq_proximity
     enabled: true
+  - name: reliability
+    enabled: false
+  - name: hq_to_destination
+    enabled: false
 thresholds:
   # Jev Choice answers below this confidence send the Order to Review.
   field_confidence: 0.75

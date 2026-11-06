@@ -1,11 +1,12 @@
 """SelectionService: the one entry point for "pick a carrier for this Order"."""
 
+import functools
 from decimal import Decimal
 
 from sqlmodel import Session, select
 
 from app import messages
-from app.database.models import Carrier, DistanceCache, Selection
+from app.database.models import Carrier, Selection
 from app.engine.selector import select_carrier
 from app.engine.types import CarrierSpec, OrderContext, OrderSpec
 from app.schemas.selection import (
@@ -22,7 +23,8 @@ from app.schemas.selection import (
     StructuredOrder,
 )
 from app.services.cities import normalize_city
-from app.services.distance import CASE_CITIES, DistanceService
+from app.services.city_catalog import known_cities
+from app.services.distance import DistanceService
 from app.services.interpreter import SENTINELS, Interpretation, Interpreter, InterpreterUnavailable
 from app.services.rules_store import RuleSet, RulesStore
 
@@ -58,7 +60,7 @@ class SelectionService:
         if self._interpreter is None:
             return unavailable
         try:
-            interpretation = self._interpreter.interpret(text, self._known_cities())
+            interpretation = self._interpreter.interpret(text, known_cities(self._session))
         except InterpreterUnavailable:
             return unavailable
 
@@ -80,7 +82,7 @@ class SelectionService:
             origin=interpretation.origin.value,
             destination=interpretation.destination.value,
             container_size=int(interpretation.container_size.value),
-            cargo_type=interpretation.cargo_type.value,
+            cargo_types=[interpretation.cargo_type.value],  # Jev reads one type; the form can pick several
         )
         response = self._decide(order, rules)
         response.confidence = confidence
@@ -102,9 +104,10 @@ class SelectionService:
             )
 
         ctx = OrderContext(
-            order=OrderSpec(order.origin, order.destination, order.container_size, order.cargo_type),
+            order=OrderSpec(order.origin, order.destination, order.container_size, tuple(order.cargo_types)),
             route_miles=route.miles,
-            hq_distance=self._hq_distance,
+            # Memoized per request: criteria may ask for the same pair several times while sorting.
+            hq_distance=functools.cache(self._hq_distance),
         )
         carriers = self._load_carriers()
         outcome = select_carrier(carriers, ctx, rules.constraints, rules.enabled_ranking)
@@ -178,14 +181,6 @@ class SelectionService:
         row.response = response.model_dump(mode="json")
         self._session.commit()
         return response
-
-    def _known_cities(self) -> list[str]:
-        """Cities Jev may choose from: the case table, every carrier HQ and every cached route end."""
-        cities = set(CASE_CITIES)
-        cities.update(normalize_city(c) for c in self._session.exec(select(Carrier.headquarters_city)).all())
-        for a, b in self._session.exec(select(DistanceCache.city_a, DistanceCache.city_b)).all():
-            cities.update((a, b))
-        return sorted(cities)
 
     def _hq_distance(self, hq_city: str, origin: str) -> Decimal | None:
         distance = self._distances.get(hq_city, origin)

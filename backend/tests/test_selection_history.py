@@ -14,7 +14,7 @@ def test_each_selection_is_recorded_and_can_be_reopened(client):
         "origin": "Miami",
         "destination": "Orlando",
         "container_size": 40,
-        "cargo_type": "Dry",
+        "cargo_types": ["Dry"],
     }
     assert stored["response"] == result
     assert stored["ranking_used"] == ["total_cost", "hq_proximity"]

@@ -74,7 +74,7 @@ def test_sdk_errors_become_interpreter_unavailable(error):
 
 def test_each_note_is_one_noul_question_mapped_back_to_its_carrier():
     client = StubClient({"note_0": {"type": "noul", "noul": 0.92}, "note_1": {"type": "noul", "noul": 0.05}})
-    order = {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_type": "Dry"}
+    order = {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_types": ["Dry"]}
 
     result = TypeSafeInterpreter(client).assess_notes(
         order, {"S-Logistics": "Hafta sonu çalışmıyoruz.", "M-Logistics": "Her gün açığız."}
@@ -90,5 +90,5 @@ def test_each_note_is_one_noul_question_mapped_back_to_its_carrier():
 def test_note_check_sdk_error_becomes_interpreter_unavailable():
     with pytest.raises(InterpreterUnavailable):
         TypeSafeInterpreter(StubClient(error=TypeSafeAPIConnectionError("down"))).assess_notes(
-            {"origin": "A", "destination": "B", "container_size": 20, "cargo_type": "Dry"}, {"X": "note"}
+            {"origin": "A", "destination": "B", "container_size": 20, "cargo_types": ["Dry"]}, {"X": "note"}
         )

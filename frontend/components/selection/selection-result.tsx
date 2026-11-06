@@ -9,6 +9,8 @@ import {
   StickyNote,
 } from "lucide-react";
 
+import Link from "next/link";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,8 +77,37 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
             hint={`${order.origin} → ${order.destination}`}
             badge={distance ? DISTANCE_SOURCE_LABELS[distance.source] : undefined}
           />
-          <Stat label="Sipariş" value={`${order.container_size} ft`} hint={CARGO_LABELS[order.cargo_type]} />
+          <Stat
+            label="Sipariş"
+            value={`${order.container_size} ft`}
+            hint={order.cargo_types.map((t) => CARGO_LABELS[t]).join(" + ")}
+          />
         </div>
+      )}
+
+      {result.review && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Jev&apos;in sorusu</CardTitle>
+            <CardDescription>{result.review.question}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {Object.keys(result.review.suggestions).length > 0 && (
+              <p>
+                <span className="text-muted-foreground">Jev&apos;in okudukları: </span>
+                {Object.entries(result.review.suggestions)
+                  .map(([field, value]) => `${FIELD_LABELS[field] ?? field}: ${value}`)
+                  .join(" · ")}
+              </p>
+            )}
+            <Link
+              href={`/orders/new?${new URLSearchParams(result.review.suggestions).toString()}`}
+              className="text-primary inline-block font-medium underline-offset-4 hover:underline"
+            >
+              Formda düzelt ve taşıyıcı bul →
+            </Link>
+          </CardContent>
+        </Card>
       )}
 
       {result.warnings.length > 0 && (

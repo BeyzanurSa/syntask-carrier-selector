@@ -14,7 +14,7 @@ export type RuleSet = Schemas["RuleSet"];
 export type RankingEntry = Schemas["RankingEntry"];
 export type Carrier = Schemas["CarrierOut"];
 export type ContainerSize = StructuredOrder["container_size"];
-export type CargoType = StructuredOrder["cargo_type"];
+export type CargoType = StructuredOrder["cargo_types"][number];
 
 export const CONTAINER_SIZES: ContainerSize[] = [20, 40, 45];
 export const CARGO_TYPES: CargoType[] = ["Dry", "Reefer", "Hazardous"];

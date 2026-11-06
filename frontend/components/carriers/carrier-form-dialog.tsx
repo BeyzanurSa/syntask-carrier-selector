@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
+import { CityInput } from "@/components/city-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,7 +41,8 @@ type FormState = {
   pricePerMile: string;
   isActive: boolean;
   description: string;
-  attributes: string;
+  reliability: string; // percent 0–100 in the form, stored as 0–1 in attributes.reliability
+  attributes: string; // any other attributes, as JSON
 };
 
 function toForm(carrier?: Carrier): FormState {
@@ -54,7 +56,15 @@ function toForm(carrier?: Carrier): FormState {
     pricePerMile: carrier?.price_per_mile ?? "",
     isActive: carrier?.is_active ?? true,
     description: carrier?.description ?? "",
-    attributes: carrier && Object.keys(carrier.attributes ?? {}).length ? JSON.stringify(carrier.attributes, null, 2) : "",
+    ...splitReliability(carrier?.attributes ?? {}),
+  };
+}
+
+function splitReliability(attributes: Record<string, unknown>): { reliability: string; attributes: string } {
+  const { reliability, ...rest } = attributes;
+  return {
+    reliability: typeof reliability === "number" ? String(Math.round(reliability * 100)) : "",
+    attributes: Object.keys(rest).length ? JSON.stringify(rest, null, 2) : "",
   };
 }
 
@@ -70,6 +80,13 @@ function toPayload(form: FormState): CarrierIn | string {
     if (typeof attributes !== "object" || attributes === null || Array.isArray(attributes)) {
       return "Ek özellikler bir JSON nesnesi olmalı, ör. {\"reliability\": 0.9}";
     }
+  }
+  if (form.reliability.trim() !== "") {
+    const percent = Number(form.reliability);
+    if (!Number.isFinite(percent) || percent < 0 || percent > 100) return "Güvenilirlik 0 ile 100 arasında olmalı.";
+    attributes = { ...attributes, reliability: percent / 100 };
+  } else {
+    delete attributes.reliability;
   }
   const optionalInt = (value: string) => (value.trim() === "" ? null : Number(value));
   return {
@@ -145,11 +162,11 @@ export function CarrierFormDialog({
             <Input id="name" required value={form.name} onChange={(e) => set("name", e.target.value)} />
           </Field>
           <Field id="hq" label="Merkez şehir">
-            <Input
+            <CityInput
               id="hq"
               required
               value={form.headquartersCity}
-              onChange={(e) => set("headquartersCity", e.target.value)}
+              onChange={(value) => set("headquartersCity", value)}
             />
           </Field>
           <Field id="min" label="Min. mesafe (mil)" hint="Boş = alt sınır yok">
@@ -202,6 +219,20 @@ export function CarrierFormDialog({
             <Label htmlFor="active">Aktif</Label>
           </div>
 
+          <Field id="reliability" label="Güvenilirlik (%)" hint="Boş = puan yok; kriter açıksa sona kalır">
+            <Input
+              id="reliability"
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              placeholder="ör. 92"
+              value={form.reliability}
+              onChange={(e) => set("reliability", e.target.value)}
+            />
+          </Field>
+          <div className="hidden sm:block" aria-hidden />
+
           <Field id="description" label="Açıklama (serbest metin)" className="sm:col-span-2">
             <Textarea
               id="description"
@@ -216,7 +247,7 @@ export function CarrierFormDialog({
               id="attributes"
               rows={2}
               className="font-mono text-xs"
-              placeholder='{"reliability": 0.9}'
+              placeholder='{"on_time_rate": 0.97}'
               value={form.attributes}
               onChange={(e) => set("attributes", e.target.value)}
             />

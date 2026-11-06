@@ -47,6 +47,16 @@ class CarrierIn(BaseModel):
     def deduplicate(cls, values: list) -> list:
         return list(dict.fromkeys(values))
 
+    @field_validator("attributes")
+    @classmethod
+    def reliability_in_range(cls, attributes: dict) -> dict:
+        reliability = attributes.get("reliability")
+        if reliability is not None and (
+            isinstance(reliability, bool) or not isinstance(reliability, int | float) or not 0 <= reliability <= 1
+        ):
+            raise ValueError("Güvenilirlik 0 ile 1 arasında bir sayı olmalı")
+        return attributes
+
     @model_validator(mode="after")
     def min_not_above_max(self) -> Self:
         if self.min_distance is not None and self.max_distance is not None and self.min_distance > self.max_distance:

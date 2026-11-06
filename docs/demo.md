@@ -66,6 +66,12 @@ Ek gösterim (belirsizlik): `Need a reefer box from Ft. Lauderdale to Miami asap
 
 Sonra **Kurallar → Toplam ücret ↑ → Kaydet** ile varsayılana dönün.
 
+**Ek (yeni kriter canlı ekleme sorusu gelirse):** Taşıyıcılar'da S-Logistics'e Güvenilirlik %80, M-Logistics'e %95 girin → Kurallar'da **Güvenilirlik**'i açıp en üste alın → Miami → Orlando, 40 ft, Dry → **M-Logistics** ("S-Logistics: Güvenilirlik 15 puan daha düşük"). Kriter `ranking.py`'de tek bir sınıf; şema değişmedi.
+
+**Ek (yazım hatası):** Form'da çıkış şehrine `Miammi` yazıp alandan çıkın → "Miami mi demek istediniz?".
+
+**Ek (çoklu yük):** Miami → Fort Lauderdale, 20 ft, Reefer + Hazardous → tek uygun firma **M-Logistics**; S'nin iki ayrı yük tipi gerekçesi var.
+
 ## Olası sorular
 
 | Soru | Kısa cevap |

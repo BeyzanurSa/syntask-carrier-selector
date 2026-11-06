@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Loader2, MessageCircleQuestion, Sparkles } from "lucide-react";
 
+import { CityInput } from "@/components/city-input";
 import { SelectionResult } from "@/components/selection/selection-result";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api/client";
@@ -28,26 +30,25 @@ const SELECT_CLASS =
 
 type Mode = "text" | "form";
 
-type Fields = { origin: string; destination: string; containerSize: ContainerSize | ""; cargoType: CargoType | "" };
+type Fields = { origin: string; destination: string; containerSize: ContainerSize | ""; cargoTypes: CargoType[] };
 
-const EMPTY_FIELDS: Fields = { origin: "", destination: "", containerSize: "", cargoType: "" };
-
-/** Prefill the form from Jev's suggestions after a review or an unavailable Jev. */
-function fieldsFrom(result: SelectionResponse): Fields {
-  const s = result.review?.suggestions ?? {};
+/** Fields from Jev's suggestions (review) or from the "Formda düzelt" link on a review record. */
+function fieldsFrom(s: Record<string, string | null | undefined>): Fields {
   const size = Number(s.container_size);
   return {
     origin: s.origin ?? "",
     destination: s.destination ?? "",
     containerSize: CONTAINER_SIZES.includes(size as ContainerSize) ? (size as ContainerSize) : "",
-    cargoType: CARGO_TYPES.includes(s.cargo_type as CargoType) ? (s.cargo_type as CargoType) : "",
+    cargoTypes: CARGO_TYPES.filter((t) => (s.cargo_type ?? "").split(",").includes(t)),
   };
 }
 
 export function OrderForm() {
-  const [mode, setMode] = useState<Mode>("text");
+  const params = useSearchParams();
+  const prefilled = params.has("origin") || params.has("container_size") || params.has("cargo_type");
+  const [mode, setMode] = useState<Mode>(prefilled ? "form" : "text");
   const [text, setText] = useState("");
-  const [fields, setFields] = useState<Fields>(EMPTY_FIELDS);
+  const [fields, setFields] = useState<Fields>(() => fieldsFrom(Object.fromEntries(params)));
   const [review, setReview] = useState<SelectionResponse | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function OrderForm() {
       if (data.status === "needs_review" || data.status === "jev_unavailable") {
         // No carrier was assigned: hand over to the form, prefilled with whatever Jev could read.
         setReview(data);
-        setFields(fieldsFrom(data));
+        setFields(fieldsFrom(data.review?.suggestions ?? {}));
         setMode("form");
         setResult(null);
         return;
@@ -91,15 +92,15 @@ export function OrderForm() {
 
   function submitFields(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (fields.containerSize === "" || fields.cargoType === "") {
-      setError("Konteyner boyutu ve yük tipini seçin.");
+    if (fields.containerSize === "" || fields.cargoTypes.length === 0) {
+      setError("Konteyner boyutunu ve en az bir yük tipini seçin.");
       return;
     }
     submit({
       origin: fields.origin,
       destination: fields.destination,
       container_size: fields.containerSize,
-      cargo_type: fields.cargoType,
+      cargo_types: fields.cargoTypes,
     });
   }
 
@@ -163,23 +164,23 @@ export function OrderForm() {
                 </Alert>
               )}
               <Field id="origin" label="Çıkış şehri" hint={hintFor("origin", review)}>
-                <Input
+                <CityInput
                   id="origin"
                   required
                   placeholder="örn. Miami"
-                  aria-invalid={uncertain.has("origin") || undefined}
+                  invalid={uncertain.has("origin")}
                   value={fields.origin}
-                  onChange={(e) => set("origin", e.target.value)}
+                  onChange={(value) => set("origin", value)}
                 />
               </Field>
               <Field id="destination" label="Varış şehri" hint={hintFor("destination", review)}>
-                <Input
+                <CityInput
                   id="destination"
                   required
                   placeholder="örn. Orlando"
-                  aria-invalid={uncertain.has("destination") || undefined}
+                  invalid={uncertain.has("destination")}
                   value={fields.destination}
-                  onChange={(e) => set("destination", e.target.value)}
+                  onChange={(value) => set("destination", value)}
                 />
               </Field>
               <Field id="container-size" label="Konteyner boyutu" hint={hintFor("container_size", review)}>
@@ -201,25 +202,35 @@ export function OrderForm() {
                   ))}
                 </select>
               </Field>
-              <Field id="cargo-type" label="Yük tipi" hint={hintFor("cargo_type", review)}>
-                <select
-                  id="cargo-type"
-                  required
-                  className={SELECT_CLASS}
-                  aria-invalid={uncertain.has("cargo_type") || undefined}
-                  value={fields.cargoType}
-                  onChange={(e) => set("cargoType", e.target.value as CargoType)}
-                >
-                  <option value="" disabled>
-                    Seçin…
-                  </option>
+              <fieldset
+                className={cn(
+                  "grid gap-1.5 rounded-lg",
+                  uncertain.has("cargo_type") && "ring-warning/40 ring-3 ring-offset-4",
+                )}
+              >
+                <legend className="mb-1 text-sm font-medium">Yük tipi</legend>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   {CARGO_TYPES.map((cargo) => (
-                    <option key={cargo} value={cargo}>
+                    <label key={cargo} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        aria-label={CARGO_LABELS[cargo]}
+                        checked={fields.cargoTypes.includes(cargo)}
+                        onCheckedChange={(on) =>
+                          set(
+                            "cargoTypes",
+                            on ? [...fields.cargoTypes, cargo] : fields.cargoTypes.filter((t) => t !== cargo),
+                          )
+                        }
+                      />
                       {CARGO_LABELS[cargo]}
-                    </option>
+                    </label>
                   ))}
-                </select>
-              </Field>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {hintFor("cargo_type", review) ??
+                    "Birden fazla seçilebilir (ör. soğutmalı tehlikeli madde); firma hepsini desteklemeli."}
+                </p>
+              </fieldset>
               <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="animate-spin" aria-hidden />}

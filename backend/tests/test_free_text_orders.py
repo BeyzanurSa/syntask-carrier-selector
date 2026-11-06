@@ -21,7 +21,7 @@ def test_confident_interpretation_selects_a_carrier_and_reports_field_confidence
 
     assert result["status"] == "selected"
     assert result["selected_carrier"]["name"] == "S-Logistics"
-    assert result["order"] == {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_type": "Dry"}
+    assert result["order"] == {"origin": "Miami", "destination": "Orlando", "container_size": 40, "cargo_types": ["Dry"]}
     assert result["confidence"]["source"] == "text"
     assert result["confidence"]["min"] == 0.81
     assert result["confidence"]["fields"]["container_size"] == {"value": "40", "confidence": 0.81, "accepted": True}

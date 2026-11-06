@@ -10,8 +10,8 @@ class Constraint(Protocol):
     name: str
     label: str
 
-    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
-        """None if the carrier passes, otherwise the reason it fails."""
+    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> list[str]:
+        """The reasons the carrier fails; empty if it passes."""
         ...
 
 
@@ -19,8 +19,8 @@ class ActiveConstraint:
     name = "active"
     label = "Firma aktif"
 
-    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
-        return None if carrier.is_active else messages.INACTIVE
+    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> list[str]:
+        return [] if carrier.is_active else [messages.INACTIVE]
 
 
 class DistanceRangeConstraint:
@@ -29,35 +29,37 @@ class DistanceRangeConstraint:
     name = "distance_range"
     label = "Mesafe aralığı"
 
-    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
+    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> list[str]:
         miles = ctx.route_miles
         if carrier.min_distance is not None and miles < carrier.min_distance:
-            return messages.below_min_distance(miles, carrier.min_distance)
+            return [messages.below_min_distance(miles, carrier.min_distance)]
         if carrier.max_distance is not None and miles > carrier.max_distance:
-            return messages.above_max_distance(miles, carrier.max_distance)
-        return None
+            return [messages.above_max_distance(miles, carrier.max_distance)]
+        return []
 
 
 class ContainerSizeConstraint:
     name = "container_size"
     label = "Konteyner boyutu"
 
-    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
+    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> list[str]:
         size = ctx.order.container_size
         if size in carrier.supported_container_sizes:
-            return None
-        return messages.unsupported_container(size, carrier.supported_container_sizes)
+            return []
+        return [messages.unsupported_container(size, carrier.supported_container_sizes)]
 
 
 class CargoTypeConstraint:
-    name = "cargo_type"
+    name = "cargo_type"  # rule name kept stable for rules.yaml
     label = "Yük tipi"
 
-    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> str | None:
-        cargo = ctx.order.cargo_type
-        if cargo in carrier.supported_cargo_types:
-            return None
-        return messages.unsupported_cargo(cargo, carrier.supported_cargo_types)
+    def check(self, carrier: CarrierSpec, ctx: OrderContext) -> list[str]:
+        """Every requested cargo type must be supported; each missing one is its own reason."""
+        return [
+            messages.unsupported_cargo(cargo, carrier.supported_cargo_types)
+            for cargo in ctx.order.cargo_types
+            if cargo not in carrier.supported_cargo_types
+        ]
 
 
 CONSTRAINTS: dict[str, Constraint] = {

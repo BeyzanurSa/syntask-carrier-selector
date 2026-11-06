@@ -15,4 +15,6 @@ def normalize_city(name: str) -> str:
     alias = ALIASES.get(collapsed.lower())
     if alias:
         return alias
-    return " ".join(word.capitalize() for word in collapsed.split(" "))
+    if collapsed.islower() or collapsed.isupper():
+        return " ".join(word.capitalize() for word in collapsed.split(" "))
+    return collapsed  # mixed case was typed on purpose ("McAllen")

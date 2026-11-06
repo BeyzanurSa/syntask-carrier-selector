@@ -118,6 +118,7 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
             <TableHead className="hidden md:table-cell">Konteyner</TableHead>
             <TableHead className="hidden lg:table-cell">Yük tipi</TableHead>
             <TableHead className="text-right">$/mil</TableHead>
+            <TableHead className="hidden text-right xl:table-cell">Güvenilirlik</TableHead>
             <TableHead>Aktif</TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
           </TableRow>
@@ -142,6 +143,9 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
                 </div>
               </TableCell>
               <TableCell className="text-right tabular-nums">{formatMoney(c.price_per_mile)}</TableCell>
+              <TableCell className="text-muted-foreground hidden text-right tabular-nums xl:table-cell">
+                {typeof c.attributes?.reliability === "number" ? `%${Math.round(c.attributes.reliability * 100)}` : "—"}
+              </TableCell>
               <TableCell>
                 <Switch
                   checked={c.is_active}

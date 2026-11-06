@@ -40,4 +40,5 @@ def get_selection(session: Session, selection_id: int) -> SelectionRecord | None
 def _order_fields(row: Selection) -> dict:
     """Route and load of the decided Order; empty when the text never became an Order (review, Jev down)."""
     order = row.response.get("order") or {}
-    return {key: order.get(key) for key in ("origin", "destination", "container_size", "cargo_type")}
+    cargo_types = order.get("cargo_types") or ([order["cargo_type"]] if order.get("cargo_type") else None)
+    return {**{key: order.get(key) for key in ("origin", "destination", "container_size")}, "cargo_types": cargo_types}

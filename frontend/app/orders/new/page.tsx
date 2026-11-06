@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { OrderForm } from "@/components/orders/order-form";
 import { PageHeader } from "@/components/page-header";
@@ -12,7 +13,10 @@ export default function NewOrderPage() {
         title="Yeni Sipariş"
         description="Taşıma siparişi girin ve en uygun taşıyıcıyı bulun"
       />
-      <OrderForm />
+      {/* The form reads prefill values from the URL, which is only known at request time. */}
+      <Suspense>
+        <OrderForm />
+      </Suspense>
     </>
   );
 }
