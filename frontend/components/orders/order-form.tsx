@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Loader2, MessageCircleQuestion, Sparkles } from "lucide-react";
+import { CornerDownLeft, Eraser, Loader2, MessageCircleQuestion, Sparkles } from "lucide-react";
 
 import { CityInput } from "@/components/city-input";
 import { SelectionResult } from "@/components/selection/selection-result";
@@ -30,6 +30,24 @@ const SELECT_CLASS =
 
 type Mode = "text" | "form";
 
+const MODES: { value: Mode; label: string }[] = [
+  { value: "text", label: "Serbest metin" },
+  { value: "form", label: "Form" },
+];
+
+/** One click fills the text box; they cover the main outcomes (selected, review, multi-cargo). */
+const EXAMPLES = [
+  { label: "Miami → Orlando, 40 ft kuru", text: "Miami'den Orlando'ya 40'lık kuru yük konteyneri taşınacak." },
+  { label: "Jacksonville → Savannah, 45 ft", text: "Jacksonville'den Savannah'a 45 ft dry konteyner gönderilecek." },
+  { label: "Boyut belirtilmemiş (inceleme)", text: "Need a reefer box from Ft. Lauderdale to Miami asap" },
+  {
+    label: "Soğutmalı + tehlikeli",
+    text: "Miami'den Fort Lauderdale'e 20'lik soğutmalı tehlikeli madde konteyneri.",
+  },
+];
+
+type FieldErrors = Partial<Record<"containerSize" | "cargoTypes", string>>;
+
 type Fields = { origin: string; destination: string; containerSize: ContainerSize | ""; cargoTypes: CargoType[] };
 
 /** Fields from Jev's suggestions (review) or from the "Formda düzelt" link on a review record. */
@@ -53,9 +71,38 @@ export function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SelectionResponse | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const resultRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Record<Mode, HTMLButtonElement | null>>({ text: null, form: null });
+
+  // Bring a new result into view and move focus to it, so keyboard and screen-reader users land on it too.
+  useEffect(() => {
+    if (!result) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    resultRef.current?.focus({ preventScroll: true });
+  }, [result]);
 
   const uncertain = new Set(review?.review?.fields ?? []);
-  const set = <K extends keyof Fields>(key: K, value: Fields[K]) => setFields((f) => ({ ...f, [key]: value }));
+  const set = <K extends keyof Fields>(key: K, value: Fields[K]) => {
+    setFields((f) => ({ ...f, [key]: value }));
+    setFieldErrors((e) => ({ ...e, [key]: undefined }));
+  };
+  const hasInput = fields.origin || fields.destination || fields.containerSize !== "" || fields.cargoTypes.length > 0;
+
+  function clearForm() {
+    setFields(fieldsFrom({}));
+    setFieldErrors({});
+    setReview(null);
+    setError(null);
+  }
+
+  function onTabKey(event: React.KeyboardEvent) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const next: Mode = mode === "text" ? "form" : "text";
+    setMode(next);
+    tabRefs.current[next]?.focus();
+  }
 
   async function submit(body: SelectCarrierRequest) {
     setSubmitting(true);
@@ -92,8 +139,13 @@ export function OrderForm() {
 
   function submitFields(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (fields.containerSize === "" || fields.cargoTypes.length === 0) {
-      setError("Konteyner boyutunu ve en az bir yük tipini seçin.");
+    const errors: FieldErrors = {
+      containerSize: fields.containerSize === "" ? "Konteyner boyutunu seçin." : undefined,
+      cargoTypes: fields.cargoTypes.length === 0 ? "En az bir yük tipi seçin." : undefined,
+    };
+    if (fields.containerSize === "" || errors.cargoTypes) {
+      setFieldErrors(errors);
+      document.getElementById(errors.containerSize ? "container-size" : "cargo-types")?.focus();
       return;
     }
     submit({
@@ -113,45 +165,84 @@ export function OrderForm() {
             Serbest metni Jev yorumlar; emin olmadığı alanlar için sizden onay istenir. Form ile girilen siparişler
             Jev&apos;e gitmez.
           </CardDescription>
-          <div role="tablist" aria-label="Giriş türü" className="bg-muted mt-2 inline-flex w-fit rounded-lg p-1">
-            {(["text", "form"] as const).map((m) => (
+          <div
+            role="tablist"
+            aria-label="Giriş türü"
+            onKeyDown={onTabKey}
+            className="bg-muted mt-2 inline-flex w-fit rounded-lg p-1"
+          >
+            {MODES.map(({ value, label }) => (
               <button
-                key={m}
+                key={value}
+                ref={(el) => {
+                  tabRefs.current[value] = el;
+                }}
                 role="tab"
                 type="button"
-                aria-selected={mode === m}
-                onClick={() => setMode(m)}
+                aria-selected={mode === value}
+                tabIndex={mode === value ? 0 : -1}
+                onClick={() => setMode(value)}
                 className={cn(
-                  "rounded-md px-3 py-1 text-sm transition-colors",
-                  mode === m ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  "rounded-md px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  mode === value
+                    ? "bg-card text-primary ring-border font-medium shadow-sm ring-1"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {m === "text" ? "Serbest metin" : "Form"}
+                {label}
               </button>
             ))}
           </div>
         </CardHeader>
         <CardContent>
           {mode === "text" ? (
-            <form onSubmit={submitText} className="grid gap-3">
+            <form onSubmit={submitText} aria-busy={submitting} className="grid gap-3">
               <Label htmlFor="order-text">Sipariş metni</Label>
               <Textarea
                 id="order-text"
                 required
                 rows={3}
-                placeholder="örn. Miami'den Orlando'ya 40'lık kuru yük konteyneri taşınacak."
+                aria-describedby="order-text-help"
+                placeholder="Çıkış ve varış şehri, konteyner boyutu (20/40/45 ft) ve yük tipini yazın."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
               />
-              <div>
+              <div id="order-text-help" className="flex flex-wrap items-center gap-1.5">
+                <span className="text-muted-foreground text-xs">Örnekler:</span>
+                {EXAMPLES.map((example) => (
+                  <button
+                    key={example.label}
+                    type="button"
+                    title={example.text}
+                    onClick={() => setText(example.text)}
+                    className="bg-secondary text-secondary-foreground hover:bg-accent focus-visible:ring-ring rounded-full px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {example.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
                 <Button type="submit" disabled={submitting || !text.trim()}>
                   {submitting ? <Loader2 className="animate-spin" aria-hidden /> : <Sparkles aria-hidden />}
-                  Jev ile yorumla ve taşıyıcı bul
+                  {submitting ? "Jev yorumluyor…" : "Jev ile yorumla ve taşıyıcı bul"}
                 </Button>
+                <span className="text-muted-foreground hidden items-center gap-1 text-xs sm:inline-flex">
+                  <kbd className="bg-muted rounded border px-1 font-sans">⌘/Ctrl</kbd>+
+                  <kbd className="bg-muted inline-flex items-center rounded border px-1">
+                    <CornerDownLeft className="size-3" aria-label="Enter" />
+                  </kbd>
+                  ile gönder
+                </span>
               </div>
             </form>
           ) : (
-            <form onSubmit={submitFields} className="grid gap-4 sm:grid-cols-2">
+            <form onSubmit={submitFields} aria-busy={submitting} className="grid gap-4 sm:grid-cols-2">
               {review && (
                 <Alert className="border-warning/50 bg-warning/10 sm:col-span-2">
                   <MessageCircleQuestion className="text-warning" aria-hidden />
@@ -183,12 +274,21 @@ export function OrderForm() {
                   onChange={(value) => set("destination", value)}
                 />
               </Field>
-              <Field id="container-size" label="Konteyner boyutu" hint={hintFor("container_size", review)}>
+              <Field
+                id="container-size"
+                label="Konteyner boyutu"
+                hint={hintFor("container_size", review)}
+                error={fieldErrors.containerSize}
+              >
                 <select
                   id="container-size"
-                  required
-                  className={SELECT_CLASS}
-                  aria-invalid={uncertain.has("container_size") || undefined}
+                  aria-required
+                  className={cn(
+                    SELECT_CLASS,
+                    fieldErrors.containerSize && "border-destructive aria-invalid:border-destructive aria-invalid:ring-destructive/30",
+                  )}
+                  aria-invalid={uncertain.has("container_size") || !!fieldErrors.containerSize || undefined}
+                  aria-describedby={fieldErrors.containerSize ? "container-size-error" : undefined}
                   value={fields.containerSize}
                   onChange={(e) => set("containerSize", Number(e.target.value) as ContainerSize)}
                 >
@@ -206,12 +306,14 @@ export function OrderForm() {
                 className={cn(
                   "grid gap-1.5 rounded-lg",
                   uncertain.has("cargo_type") && "ring-warning/40 ring-3 ring-offset-4",
+                  fieldErrors.cargoTypes && "ring-destructive/40 ring-3 ring-offset-4",
                 )}
+                aria-describedby={fieldErrors.cargoTypes ? "cargo-types-error" : undefined}
               >
                 <legend className="mb-1 text-sm font-medium">Yük tipi</legend>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                <div id="cargo-types" tabIndex={-1} className="flex flex-wrap gap-x-4 gap-y-2 outline-none">
                   {CARGO_TYPES.map((cargo) => (
-                    <label key={cargo} className="flex items-center gap-2 text-sm">
+                    <label key={cargo} className="flex cursor-pointer items-center gap-2 py-0.5 text-sm">
                       <Checkbox
                         aria-label={CARGO_LABELS[cargo]}
                         checked={fields.cargoTypes.includes(cargo)}
@@ -226,6 +328,11 @@ export function OrderForm() {
                     </label>
                   ))}
                 </div>
+                {fieldErrors.cargoTypes && (
+                  <p id="cargo-types-error" role="alert" className="text-destructive text-xs font-medium">
+                    {fieldErrors.cargoTypes}
+                  </p>
+                )}
                 <p className="text-muted-foreground text-xs">
                   {hintFor("cargo_type", review) ??
                     "Birden fazla seçilebilir (ör. soğutmalı tehlikeli madde); firma hepsini desteklemeli."}
@@ -234,8 +341,14 @@ export function OrderForm() {
               <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="animate-spin" aria-hidden />}
-                  {review ? "Onayla ve taşıyıcı bul" : "En uygun taşıyıcıyı bul"}
+                  {submitting ? "Hesaplanıyor…" : review ? "Onayla ve taşıyıcı bul" : "En uygun taşıyıcıyı bul"}
                 </Button>
+                {hasInput && (
+                  <Button type="button" variant="ghost" onClick={clearForm} disabled={submitting}>
+                    <Eraser aria-hidden />
+                    Temizle
+                  </Button>
+                )}
                 {review?.selection_id != null && (
                   <Link
                     href={`/selections/${review.selection_id}`}
@@ -247,18 +360,17 @@ export function OrderForm() {
               </div>
             </form>
           )}
+          {error && (
+            <Alert variant="destructive" role="alert" className="mt-4">
+              <AlertTitle>İstek başarısız</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
-      {error && (
-        <Alert variant="destructive" className="max-w-3xl">
-          <AlertTitle>İstek başarısız</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       {result && (
-        <div className="space-y-3">
+        <div ref={resultRef} tabIndex={-1} className="scroll-mt-6 space-y-3 outline-none">
           {result.selection_id != null && (
             <Link
               href={`/selections/${result.selection_id}`}
@@ -286,17 +398,24 @@ function Field({
   id,
   label,
   hint,
+  error,
   children,
 }: {
   id: string;
   label: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       {children}
+      {error && (
+        <p id={`${id}-error`} role="alert" className="text-destructive text-xs font-medium">
+          {error}
+        </p>
+      )}
       {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
     </div>
   );

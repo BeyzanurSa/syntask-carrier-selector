@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { PackagePlus } from "lucide-react";
 
 import { BackendStatus } from "@/components/backend-status";
 import { PageHeader } from "@/components/page-header";
 import { SelectionsTable } from "@/components/selection/selections-table";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchCarriers, fetchSelections } from "@/lib/api/server";
 
@@ -12,7 +14,16 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Taşıyıcı ağı ve son seçimlerin özeti" />
+      <PageHeader
+        title="Dashboard"
+        description="Taşıyıcı ağı ve son seçimlerin özeti"
+        actions={
+          <Link href="/orders/new" className={buttonVariants()}>
+            <PackagePlus aria-hidden />
+            Yeni sipariş
+          </Link>
+        }
+      />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard label="Toplam taşıyıcı" value={carriers.length} href="/carriers" />
         <StatCard label="Aktif taşıyıcı" value={active} href="/carriers" />
@@ -49,7 +60,7 @@ function StatCard({ label, value, href }: { label: string; value: number; href: 
       <Card size="sm" className="hover:ring-primary/30 h-full transition-shadow hover:ring-2">
         <CardHeader>
           <CardDescription>{label}</CardDescription>
-          <CardTitle className="text-3xl tabular-nums">{value}</CardTitle>
+          <CardTitle className="font-semibold tabular-nums group-data-[size=sm]/card:text-3xl">{value}</CardTitle>
         </CardHeader>
       </Card>
     </Link>

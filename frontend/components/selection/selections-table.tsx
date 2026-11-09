@@ -39,14 +39,16 @@ export function SelectionsTable({ selections }: { selections: SelectionSummary[]
       </TableHeader>
       <TableBody>
         {selections.map((s) => (
-          <TableRow key={s.id}>
+          // The route link is stretched over the whole row, so any cell opens the record (one tab stop per row).
+          <TableRow key={s.id} className="group relative cursor-pointer">
             <TableCell className="text-muted-foreground hidden tabular-nums sm:table-cell">
-              <Link href={`/selections/${s.id}`} className="hover:text-foreground hover:underline">
-                {formatDateTime(s.created_at)}
-              </Link>
+              {formatDateTime(s.created_at)}
             </TableCell>
             <TableCell className="font-medium whitespace-normal">
-              <Link href={`/selections/${s.id}`} className="hover:underline">
+              <Link
+                href={`/selections/${s.id}`}
+                className="group-hover:text-primary rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-md focus-visible:after:ring-2 focus-visible:after:ring-ring"
+              >
                 {s.origin ? (
                   `${s.origin} → ${s.destination}`
                 ) : (

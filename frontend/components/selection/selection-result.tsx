@@ -7,6 +7,7 @@ import {
   MessageCircleQuestion,
   PlugZap,
   StickyNote,
+  Trophy,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -69,8 +70,10 @@ export function SelectionResult({ result }: { result: SelectionResponse }) {
             value={winner?.name ?? "—"}
             hint={winner?.headquarters_city}
             badge={winner && warned.has(winner.name) ? "Not uyarısı" : undefined}
+            highlight={!!winner}
+            icon={Trophy}
           />
-          <Stat label="Toplam ücret" value={formatMoney(result.total_cost)} />
+          <Stat label="Toplam ücret" value={formatMoney(result.total_cost)} highlight={!!winner} />
           <Stat
             label="Rota mesafesi"
             value={distance ? formatMiles(distance.miles) : "Bilinmiyor"}
@@ -248,20 +251,28 @@ function Stat({
   value,
   hint,
   badge,
+  highlight,
+  icon: StatIcon,
 }: {
   label: string;
   value: string;
   hint?: string;
   badge?: string;
+  /** The answer itself (winner and price): stands out from the context cards. */
+  highlight?: boolean;
+  icon?: typeof Trophy;
 }) {
   return (
-    <Card size="sm">
+    <Card size="sm" className={cn(highlight && "ring-primary/40 bg-primary/[0.03] ring-2")}>
       <CardHeader>
         <CardDescription className="flex items-center justify-between gap-2">
-          {label}
+          <span className="flex items-center gap-1.5">
+            {StatIcon && <StatIcon className="text-primary size-3.5" aria-hidden />}
+            {label}
+          </span>
           {badge && <Badge variant="secondary">{badge}</Badge>}
         </CardDescription>
-        <CardTitle className="text-xl tabular-nums">{value}</CardTitle>
+        <CardTitle className={cn("font-semibold tabular-nums", highlight ? "group-data-[size=sm]/card:text-2xl" : "group-data-[size=sm]/card:text-xl")}>{value}</CardTitle>
         {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
       </CardHeader>
     </Card>

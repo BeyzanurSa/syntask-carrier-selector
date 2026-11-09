@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { CarrierFormDialog } from "@/components/carriers/carrier-form-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -45,14 +46,14 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Carrier | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<Set<number>>(new Set());
   const [notice, setNotice] = useState<{ name: string; warnings: string[] } | null>(null);
 
   // Server Component data is re-fetched after every change.
   const refresh = () => router.refresh();
 
   async function setActive(carrier: Carrier, isActive: boolean) {
-    setError(null);
+    setPending((ids) => new Set(ids).add(carrier.id));
     const body: CarrierIn = {
       name: carrier.name,
       headquarters_city: carrier.headquarters_city,
@@ -65,21 +66,39 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
       description: carrier.description,
       attributes: carrier.attributes,
     };
-    const { error: apiError } = await api.PUT("/carriers/{carrier_id}", {
-      params: { path: { carrier_id: carrier.id } },
-      body,
+    try {
+      const { error: apiError } = await api.PUT("/carriers/{carrier_id}", {
+        params: { path: { carrier_id: carrier.id } },
+        body,
+      });
+      if (apiError) toast.error(apiErrorMessage(apiError));
+      else
+        toast.success(
+          isActive ? `${carrier.name} aktif; seçimlere katılacak.` : `${carrier.name} pasif; seçimlerde dikkate alınmayacak.`,
+        );
+    } catch {
+      toast.error("Backend'e ulaşılamadı.");
+    }
+    setPending((ids) => {
+      const next = new Set(ids);
+      next.delete(carrier.id);
+      return next;
     });
-    if (apiError) setError(apiErrorMessage(apiError));
     refresh();
   }
 
   async function confirmDelete() {
     if (!deleting) return;
-    setError(null);
-    const { error: apiError } = await api.DELETE("/carriers/{carrier_id}", {
-      params: { path: { carrier_id: deleting.id } },
-    });
-    if (apiError) setError(apiErrorMessage(apiError));
+    const name = deleting.name;
+    try {
+      const { error: apiError } = await api.DELETE("/carriers/{carrier_id}", {
+        params: { path: { carrier_id: deleting.id } },
+      });
+      if (apiError) toast.error(apiErrorMessage(apiError));
+      else toast.success(`${name} silindi. Geçmiş seçim kayıtları korunuyor.`);
+    } catch {
+      toast.error("Backend'e ulaşılamadı.");
+    }
     setDeleting(null);
     refresh();
   }
@@ -96,7 +115,6 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
         </Button>
       </div>
 
-      {error && <p className="text-destructive text-sm">{error}</p>}
       {notice && notice.warnings.length > 0 && (
         <Alert className="border-warning/50 bg-warning/10">
           <AlertTriangle className="text-warning" aria-hidden />
@@ -124,6 +142,19 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          {carriers.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={9} className="text-muted-foreground py-10 text-center whitespace-normal">
+                Henüz taşıyıcı yok. Seçim yapılabilmesi için en az bir aktif taşıyıcı ekleyin.
+                <div className="mt-3">
+                  <Button variant="outline" onClick={() => setEditing({ key: Date.now() })}>
+                    <Plus aria-hidden />
+                    İlk taşıyıcıyı ekle
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
           {carriers.map((c) => (
             <TableRow key={c.id} className={c.is_active ? undefined : "text-muted-foreground"}>
               <TableCell className="max-w-64 whitespace-normal">
@@ -149,6 +180,7 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
               <TableCell>
                 <Switch
                   checked={c.is_active}
+                  disabled={pending.has(c.id)}
                   onCheckedChange={(on) => setActive(c, on)}
                   aria-label={`${c.name} aktif`}
                 />
@@ -179,6 +211,7 @@ export function CarrierManager({ carriers }: { carriers: Carrier[] }) {
           onOpenChange={(open) => !open && setEditing(null)}
           onSaved={(name, warnings) => {
             setNotice({ name, warnings });
+            if (warnings.length === 0) toast.success(`${name} kaydedildi.`);
             refresh();
           }}
         />

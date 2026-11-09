@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, CheckCircle2, Loader2, Lock } from "lucide-react";
@@ -32,6 +32,14 @@ export function RulesEditor({ rules }: { rules: Rules }) {
   const label = (name: string) => rules.labels[name] ?? name;
   const dirty = JSON.stringify(ranking) !== JSON.stringify(rules.ranking);
   const noneEnabled = !ranking.some((r) => r.enabled);
+
+  // Leaving the page with an unsaved order would silently discard it.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   function update(next: RankingEntry[]) {
     setRanking(next);
@@ -74,7 +82,11 @@ export function RulesEditor({ rules }: { rules: Rules }) {
             {ranking.map((entry, index) => (
               <li
                 key={entry.name}
-                className={cn("flex items-center gap-3 px-3 py-2.5", !entry.enabled && "text-muted-foreground")}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 transition-colors",
+                  !entry.enabled && "text-muted-foreground bg-muted/40",
+                  entry.name !== rules.ranking[index]?.name && "bg-warning/10",
+                )}
               >
                 <span className="bg-secondary text-secondary-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums">
                   {index + 1}
@@ -132,14 +144,20 @@ export function RulesEditor({ rules }: { rules: Rules }) {
             </Alert>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button onClick={save} disabled={!dirty || noneEnabled || saving}>
               {saving && <Loader2 className="animate-spin" aria-hidden />}
-              Kaydet
+              {saving ? "Kaydediliyor…" : "Kaydet"}
             </Button>
             <Button variant="outline" disabled={!dirty || saving} onClick={() => update(rules.ranking)}>
               Geri al
             </Button>
+            {dirty && (
+              <span role="status" className="text-foreground flex items-center gap-1.5 text-xs">
+                <span aria-hidden className="bg-warning size-2 rounded-full" />
+                Kaydedilmemiş değişiklik var
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
